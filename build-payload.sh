@@ -124,7 +124,10 @@ for src in "${APP_LIST[@]}"; do
 		   buildInstallFlatpakApps
 done
 
-
+#
+# If the --target param was specified, assert that it's a valid
+# module (now that they are all in build_source_modules[])
+#
 if [ ! -z "${build_source_target}" ]; then
     source_target_found=false
     for module in "${build_source_modules[@]}"; do
