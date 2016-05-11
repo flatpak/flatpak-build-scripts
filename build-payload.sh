@@ -6,6 +6,7 @@ topdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 build_source_workdir=${topdir}/work
 build_source_force=false
 build_source_arch=$(flatpak --default-arch)
+build_source_target=
 
 function usage () {
     echo "Usage: "
@@ -18,6 +19,7 @@ function usage () {
     echo "  -h --help                      Display this help message and exit"
     echo "  -a --arch     <arch-name>      Host compatible cpu architecture to build for (default: The native arch)"
     echo "  -w --workdir  <directory>      The directory to perform builds in (default: 'work' subdirectory)"
+    echo "  -t --target   <modulename>     Specify which module to process, otherwise processes all modules"
     echo "  -f --force                     Use brute force, sometimes wiping directories clean when required"
     echo
     echo "NOTE: Only host compatible architectures may be specified with --arch. Currently the supported"
@@ -40,6 +42,10 @@ while : ; do
 
 	-w|--workdir)
 	    arg_workdir=${2}
+	    shift 2 ;;
+
+	-t|--target)
+	    build_source_target=${2}
 	    shift 2 ;;
 
 	-f|--force)
@@ -117,6 +123,24 @@ for src in "${APP_LIST[@]}"; do
 		   ${APP_BRANCH["${src}"]} \
 		   buildInstallFlatpakApps
 done
+
+
+if [ ! -z "${build_source_target}" ]; then
+    source_target_found=false
+    for module in "${build_source_modules[@]}"; do
+	if [ "${module}" == "${build_source_target}" ]; then
+	    source_target_found=true;
+	    break;
+	fi
+    done
+
+    if ! $source_target_found; then
+	echo "Specified target is not one of the modules defined in the configuration file."
+	echo
+	usage
+	exit 1;
+    fi
+fi
 
 #
 # Run the build

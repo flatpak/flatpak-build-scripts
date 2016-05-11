@@ -160,9 +160,13 @@ function buildSourceBuild() {
 function buildSourceDownloadSources() {
     local module
 
-    for module in "${build_source_modules[@]}"; do
-	buildSourceDownload "${module}"
-    done
+    if [ ! -z "${build_source_target}" ]; then
+	buildSourceDownload "${build_source_target}"
+    else
+	for module in "${build_source_modules[@]}"; do
+	    buildSourceDownload "${module}"
+	done
+    fi
 }
 
 #
@@ -171,7 +175,11 @@ function buildSourceDownloadSources() {
 function buildSourceBuildSources() {
     local module
 
-    for module in "${build_source_modules[@]}"; do
-	buildSourceBuild "${module}"
-    done
+    if [ ! -z "${build_source_target}" ]; then
+	buildSourceBuild "${build_source_target}"
+    else
+	for module in "${build_source_modules[@]}"; do
+	    buildSourceBuild "${module}"
+	done
+    fi
 }
