@@ -49,12 +49,13 @@ function flatpakInstallAsset() {
 	branch=
     fi
 
-    # The remote is named after the module
+    # If install reports an error it's probably installed, try an upgrade in that case.
     flatpak install ${flatpak_install_args} ${module} ${asset} ${branch}
     error_code=$?
 
     if [ "$?" -ne "0" ]; then
-	dienow "Failed to install: ${asset} in remote ${module}"
+	flatpak update ${flatpak_install_args} ${asset} ${branch} || \
+	    dienow "Failed to install or update: ${asset}/${branch} from remote ${module}"
     fi
 }
 
