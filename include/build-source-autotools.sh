@@ -9,10 +9,10 @@ function buildInstallAutotools() {
     cd "${moduledir}"
 
     echo "Configuring ${module}"
-    ./autogen.sh --prefix="${PREFIX}"
+    PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${build_source_prefix}/lib/pkgconfig" ./autogen.sh --prefix="${build_source_prefix}"
     echo "Building ${module}"
-    make -j8
+    PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${build_source_prefix}/lib/pkgconfig" make -j8
     echo "Installing ${module}"
-    sudo make install
+    PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${build_source_prefix}/lib/pkgconfig" sudo make install
     sudo ldconfig
 }
