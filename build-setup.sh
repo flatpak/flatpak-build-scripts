@@ -97,17 +97,18 @@ function installPackages() {
 }
 
 function ensureUpdateCron () {
-
     # Create the launch script based on our current configuration
     # and ensure that there is an entry in the user's crontab for
     # the launcher.
     #
-    sed -e "s/@@TOPDIR@@/${topdir}/g" \
-        -e "s/@@WORKDIR@@/${build_source_workdir}/g" \
-        -e "s/@@LOGDIR@@/${arg_logdir}/g" \
-	${topdir}/build-launcher.in > ${topdir}/build-launcher
+    sed -e "s|@@TOPDIR@@|${topdir}|g" \
+        -e "s|@@WORKDIR@@|${build_source_workdir}|g" \
+        -e "s|@@LOGDIR@@|${arg_logdir}|g" \
+	${topdir}/build-launcher.sh.in > ${topdir}/build-launcher.sh
 
-    job="0 0 * * 0 ${topdir}/build-launcher"
+    chmod +x ${topdir}/build-launcher.sh
+
+    job="${arg_cron} ${topdir}/build-launcher.sh"
     cat <(fgrep -i -v "build-launcher" <(crontab -l)) <(echo "$job") | crontab -
 }
 
