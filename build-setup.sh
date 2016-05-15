@@ -3,8 +3,10 @@
 topdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # default options
-arg_workdir=${topdir}/work
+arg_workdir=
+arg_logdir=
 arg_prefix=/usr/local
+arg_cron="0 0 * * *"
 
 function usage () {
     echo "Usage: "
@@ -17,10 +19,11 @@ function usage () {
     echo "  -h --help                      Display this help message and exit"
     echo "  -p --prefix   <directory>      Install prefix for flatpak tooling (default: /usr/local)"
     echo "  -w --workdir  <directory>      The directory to perform builds in (default: 'work' subdirectory)"
+    echo "  -l --logdir   <directory>      The directory in which to store build logs (default: Value of --workdir)"
+    echo "  -c --cron     <expression>     A cron expression indicating when the build should run (default: every day at Midnight)"
     echo
 }
 
-arg_workdir=
 while : ; do
     case "$1" in
 	-h|--help)
@@ -34,6 +37,14 @@ while : ; do
 
 	-w|--workdir)
 	    arg_workdir=${2}
+	    shift 2 ;;
+
+	-l|--logdir)
+	    arg_logdir=${2}
+	    shift 2 ;;
+
+	-c|--cron)
+	    arg_cron=${2}
 	    shift 2 ;;
 
 	*)
@@ -53,6 +64,12 @@ if [ ! -z "${arg_prefix}" ]; then
     build_source_prefix="$(cd ${arg_prefix} && pwd)"
 fi
 
+if [ -z "${arg_logdir}" ]; then
+    arg_logdir=${build_source_workdir}
+else
+    arg_logdir="$(cd ${arg_logdir} && pwd)"
+fi
+
 # Import the build source mechanics, the flatpak sources and the build config
 . ${topdir}/include/build-source.sh
 . ${topdir}/include/build-source-autotools.sh
@@ -67,17 +84,32 @@ ubuntu_packages=(git build-essential python diffstat gawk chrpath texinfo bison 
 		 libgirepository1.0-dev libxau-dev libjson-glib-dev libpolkit-gobject-1-dev
 		 libseccomp-dev elfutils libelf-dev libdwarf-dev libsoup2.4-dev)
 
-function installPackages() {
-    echo "Ensuring we have the packages we need..."
-    sudo apt-get install "${ubuntu_packages[@]}"
-}
-
 #
 # Sources that we build
 #
 buildSourceAdd "libgsystem" "git://git.gnome.org/libgsystem"          "master" buildInstallAutotools
 buildSourceAdd "ostree"     "git://git.gnome.org/ostree"              "master" buildInstallAutotools
 buildSourceAdd "xdg-app"    "https://github.com/gtristan/xdg-app.git" "master" buildInstallAutotools
+
+function installPackages() {
+    echo "Ensuring we have the packages we need..."
+    sudo apt-get install "${ubuntu_packages[@]}"
+}
+
+function ensureUpdateCron () {
+
+    # Create the launch script based on our current configuration
+    # and ensure that there is an entry in the user's crontab for
+    # the launcher.
+    #
+    sed -e "s/@@TOPDIR@@/${topdir}/g" \
+        -e "s/@@WORKDIR@@/${build_source_workdir}/g" \
+        -e "s/@@LOGDIR@@/${arg_logdir}/g" \
+	${topdir}/build-launcher.in > ${topdir}/build-launcher
+
+    job="0 0 * * 0 ${topdir}/build-launcher"
+    cat <(fgrep -i -v "build-launcher" <(crontab -l)) <(echo "$job") | crontab -
+}
 
 #
 # Main
@@ -86,3 +118,5 @@ installPackages
 
 buildSourceDownloadSources
 buildSourceBuildSources
+
+ensureUpdateCron

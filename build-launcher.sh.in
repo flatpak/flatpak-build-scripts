@@ -1,0 +1,25 @@
+#!/bin/bash
+
+logfile=@@LOGDIR@@/build-$(date +%Y-%m-%e-%H%M%S).log
+
+echo "====================================================" >> $logfile
+echo "Starting build at `date`" >> $logfile
+echo "====================================================" >> $logfile
+
+# Just manually time it in seconds
+#
+startime=$(date +%s)
+@@TOPDIR@@/build-payload.sh -w @@WORKDIR@@ >> $logfile
+error_code=$?
+endtime=$(date +%s)
+
+seconds=$((endtime-startime))
+duration=$((seconds/86400))" days "$(date -d "1970-01-01 + $seconds seconds" "+%H hours %M minutes %S seconds")
+
+echo "====================================================" >> $logfile
+if [ "${error_code}" -eq "0" ]; then
+    echo "Build completed successfully in: $duration" >> $logfile
+else
+    echo "Build failed in: $duration" >> $logfile
+fi
+echo "====================================================" >> $logfile
