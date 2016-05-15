@@ -7,6 +7,7 @@ arg_workdir=
 arg_logdir=
 arg_prefix=/usr/local
 arg_cron="0 0 * * *"
+arg_cron_only=false
 
 function usage () {
     echo "Usage: "
@@ -21,6 +22,7 @@ function usage () {
     echo "  -w --workdir  <directory>      The directory to perform builds in (default: 'work' subdirectory)"
     echo "  -l --logdir   <directory>      The directory in which to store build logs (default: Value of --workdir)"
     echo "  -c --cron     <expression>     A cron expression indicating when the build should run (default: every day at Midnight)"
+    echo "  --cron-only                    Just update the cron job without trying to install/upgrade any system components"
     echo
 }
 
@@ -46,6 +48,10 @@ while : ; do
 	-c|--cron)
 	    arg_cron=${2}
 	    shift 2 ;;
+
+	--cron-only)
+	    arg_cron_only=true
+	    shift ;;
 
 	*)
 	    break ;;
@@ -115,9 +121,11 @@ function ensureUpdateCron () {
 #
 # Main
 #
-installPackages
+if ! $arg_cron_only; then
+    installPackages
 
-buildSourceDownloadSources
-buildSourceBuildSources
+    buildSourceDownloadSources
+    buildSourceBuildSources
+fi
 
 ensureUpdateCron
