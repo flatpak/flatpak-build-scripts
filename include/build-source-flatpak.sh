@@ -109,5 +109,19 @@ function buildInstallFlatpakSdk() {
 #            App json collections           #
 #############################################
 function buildInstallFlatpakApps() {
-    echo "Not building any apps yet !"
+    local module=$1
+    local moduledir="${build_source_workdir}/${module}"
+    local app_id=
+    local app_dir="${moduledir}/app"
+
+    cd "${moduledir}" || dienow
+    for file in *.json; do
+	app_id=$(basename $file .json)
+
+	echo "========== Building $app_id ================"
+	rm -rf ${app_dir}
+	flatpak-builder --force-clean --ccache --require-changes --repo=repo --arch=${build_source_arch} \
+                        --subject="Nightly build of ${APPID}, `date`" \
+                        ${app_dir} $file || dienow "Failed to build ${app_id}"
+    done
 }
