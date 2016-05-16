@@ -2,6 +2,11 @@
 
 topdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+if [ -z "$(which flatpak)" ]; then
+    echo "Flatpak is not installed or not available in PATH"
+    exit 1
+fi
+
 # default options
 build_source_workdir=${topdir}/work
 build_source_force=false
