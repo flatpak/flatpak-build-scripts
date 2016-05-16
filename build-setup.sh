@@ -3,7 +3,7 @@
 topdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # default options
-arg_workdir=
+arg_workdir=${topdir}/work
 arg_logdir=
 arg_prefix=/usr/local
 arg_cron="0 0 * * *"
@@ -108,6 +108,7 @@ function ensureUpdateCron () {
     # the launcher.
     #
     sed -e "s|@@TOPDIR@@|${topdir}|g" \
+        -e "s|@@PREFIX@@|${build_source_prefix}|g" \
         -e "s|@@WORKDIR@@|${build_source_workdir}|g" \
         -e "s|@@LOGDIR@@|${arg_logdir}|g" \
 	${topdir}/build-launcher.sh.in > ${topdir}/build-launcher.sh

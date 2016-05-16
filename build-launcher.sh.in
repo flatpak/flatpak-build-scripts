@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Make sure flatpack and ostree are available in the cron job's PATH
+export PATH=@@PREFIX@@/bin:$PATH
+
 logfile=@@LOGDIR@@/build-$(date +%Y-%m-%e-%H%M%S).log
 
 echo "====================================================" >> $logfile
