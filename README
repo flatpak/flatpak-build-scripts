@@ -1,1 +1,46 @@
 A collection of build scripts for building flatpak SDKs and app bundles
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Configure
+~~~~~~~~~
+To configure the behavior of a build, either edit the build.conf file
+at the top level or make an alternative copy which can be supplied
+to the build tooling with a --config argument.
+
+The configuration file lets you define which branches of which
+repositories should be built.
+
+
+Build
+~~~~~
+To launch a build of the entire stack, use the build-payload.sh script.
+
+This will checkout all the relevant sources and run the build starting
+with the base runtimes, followed by the SDKs and finally the apps. If it
+is not the first time you are building in the given work directory, then
+the repositories will be updated and some redundant rebuilding is avoided.
+
+
+Setup
+~~~~~
+To setup a build, use the build-setup.sh script. This script sets up your
+build machine and as such will issue some commands with sudo and prompt
+for your password.
+
+The build-setup.sh script performs the following steps:
+
+  o Installs all required host tooling using the package manager,
+    currently this is only well tested on Ubuntu 16.04 installations
+    but is also known to work on Debian stretch - support will need
+    to be added for rpm based distros.
+
+  o Downloads, compiles and installs flatpak and some dependencies from
+    their respective git repositories (flatpak and ostree are not available
+    as packages at the time of writing this).
+
+  o Sets up a cron job to automatically run the build, running the build.
+
+This script can be run multiple times safely. Running the build-setup.sh script
+on a build machine that is already setup will result in system dependencies
+being upgraded and flatpak modules to be refreshed and possibly rebuilt.
