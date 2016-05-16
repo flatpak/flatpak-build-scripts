@@ -111,7 +111,7 @@ function ensureUpdateCron () {
         -e "s|@@PREFIX@@|${build_source_prefix}|g" \
         -e "s|@@WORKDIR@@|${build_source_workdir}|g" \
         -e "s|@@LOGDIR@@|${arg_logdir}|g" \
-	${topdir}/build-launcher.sh.in > ${topdir}/build-launcher.sh
+	${topdir}/include/build-launcher.sh.in > ${topdir}/build-launcher.sh
 
     chmod +x ${topdir}/build-launcher.sh
 
