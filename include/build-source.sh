@@ -155,30 +155,17 @@ function buildSourceBuild() {
 }
 
 #
-# Download clone and refresh all the git sources
+# Run the build
 #
-function buildSourceDownloadSources() {
+function buildSourceRun() {
     local module
 
     if [ ! -z "${build_source_target}" ]; then
 	buildSourceDownload "${build_source_target}"
-    else
-	for module in "${build_source_modules[@]}"; do
-	    buildSourceDownload "${module}"
-	done
-    fi
-}
-
-#
-# Build all the sources in a loop
-#
-function buildSourceBuildSources() {
-    local module
-
-    if [ ! -z "${build_source_target}" ]; then
 	buildSourceBuild "${build_source_target}"
     else
 	for module in "${build_source_modules[@]}"; do
+	    buildSourceDownload "${module}"
 	    buildSourceBuild "${module}"
 	done
     fi

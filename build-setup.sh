@@ -139,7 +139,6 @@ function ensureUpdateCron () {
 #
 installPackages
 
-buildSourceDownloadSources
-buildSourceBuildSources
+buildSourceRun
 
 ensureUpdateCron

@@ -179,5 +179,4 @@ fi
 #
 # Run the build
 #
-buildSourceDownloadSources
-buildSourceBuildSources
+buildSourceRun
