@@ -33,7 +33,7 @@ while : ; do
 	    exit 0;
 	    shift ;;
 
-	-a|--arch)
+	-p|--prefix)
 	    arg_prefix=${2}
 	    shift 2 ;;
 
@@ -60,15 +60,9 @@ done
 
 # Get the absolute path to the work directory and install prefix
 #
-if [ ! -z "${arg_workdir}" ]; then
-    mkdir -p "${arg_workdir}" || dienow "Failed to create work directory: ${arg_workdir}"
-    build_source_workdir="$(cd ${arg_workdir} && pwd)"
-fi
-
-if [ ! -z "${arg_prefix}" ]; then
-    mkdir -p "${arg_prefix}" || dienow "Failed to create install prefix: ${arg_prefix}"
-    build_source_prefix="$(cd ${arg_prefix} && pwd)"
-fi
+mkdir -p "${arg_workdir}" || dienow "Failed to create work directory: ${arg_workdir}"
+build_source_workdir="$(cd ${arg_workdir} && pwd)"
+build_source_prefix="$(cd ${arg_prefix} && pwd)"
 
 if [ -z "${arg_logdir}" ]; then
     arg_logdir=${build_source_workdir}

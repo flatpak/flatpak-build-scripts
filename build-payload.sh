@@ -8,12 +8,11 @@ if [ -z "$(which flatpak)" ]; then
 fi
 
 # default options
-build_source_workdir=${topdir}/work
-build_source_force=false
-build_source_arch=$(flatpak --default-arch)
-build_source_target=
-build_source_config=${topdir}/build.conf
-
+arg_workdir=${topdir}/work
+arg_config=${topdir}/build.conf
+arg_arch=
+arg_force=false
+arg_target=
 
 function usage () {
     echo "Usage: "
@@ -36,7 +35,6 @@ function usage () {
     echo "  "
 }
 
-arg_workdir=
 while : ; do
     case "$1" in
 	-h|--help)
@@ -45,7 +43,7 @@ while : ; do
 	    shift ;;
 
 	-a|--arch)
-	    build_source_arch=${2}
+	    arg_arch=${2}
 	    shift 2 ;;
 
 	-w|--workdir)
@@ -53,15 +51,15 @@ while : ; do
 	    shift 2 ;;
 
 	-t|--target)
-	    build_source_target=${2}
+	    arg_target=${2}
 	    shift 2 ;;
 
 	-c|--config)
-	    build_source_config=${2}
+	    arg_config=${2}
 	    shift 2 ;;
 
 	-f|--force)
-	    build_source_force=true
+	    arg_force=true
 	    shift ;;
 
 	*)
@@ -69,19 +67,19 @@ while : ; do
     esac
 done
 
-# Get the absolute path to the work directory
+# Collect args and check them
 #
-if [ ! -z "${arg_workdir}" ]; then
-    mkdir -p "${arg_workdir}" || dienow "Failed to create work directory: ${arg_workdir}"
-    build_source_workdir="$(cd ${arg_workdir} && pwd)"
-fi
+mkdir -p "${arg_workdir}" || dienow "Failed to create work directory: ${arg_workdir}"
+build_source_workdir="$(cd ${arg_workdir} && pwd)"
 
-if [ ! -f "${build_source_config}" ]; then
-    echo "Specified config file '${build_source_config}' does not exist"
+if [ ! -f "${arg_config}" ]; then
+    echo "Specified config file '${arg_config}' does not exist"
     echo
     usage
     exit 1
 fi
+
+build_source_force=${arg_force}
 
 # Import the build source mechanics, the flatpak sources and the build config
 . ${topdir}/include/build-source.sh
@@ -107,7 +105,19 @@ declare -A APP_VERSION
 declare -A APP_ASSETS
 
 # Source the config, populate the various types of builds
-. ${build_source_config}
+. ${arg_config}
+
+# Resolve target architecture
+if [ ! -z "${arg_arch}" ]; then
+    # From command line
+    build_source_arch=${arg_arch}
+elif [ ! -z "${BUILD_ARCH}" ]; then
+    # From config file
+    build_source_arch=${BUILD_ARCH}
+else
+    # Automatically guessed
+    build_source_arch=$(flatpak --default-arch)
+fi
 
 #
 # Add the build sources defined in build.conf
@@ -147,10 +157,10 @@ done
 # If the --target param was specified, assert that it's a valid
 # module (now that they are all in build_source_modules[])
 #
-if [ ! -z "${build_source_target}" ]; then
+if [ ! -z "${arg_target}" ]; then
     source_target_found=false
     for module in "${build_source_modules[@]}"; do
-	if [ "${module}" == "${build_source_target}" ]; then
+	if [ "${module}" == "${arg_target}" ]; then
 	    source_target_found=true;
 	    break;
 	fi
@@ -162,6 +172,8 @@ if [ ! -z "${build_source_target}" ]; then
 	usage
 	exit 1;
     fi
+
+    build_source_target=${arg_target}
 fi
 
 #
