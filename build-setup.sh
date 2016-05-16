@@ -6,8 +6,8 @@ topdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 arg_workdir=${topdir}/work
 arg_logdir=
 arg_prefix=/usr/local
+arg_config=${topdir}/build.conf
 arg_cron="0 0 * * *"
-arg_cron_only=false
 
 function usage () {
     echo "Usage: "
@@ -21,8 +21,8 @@ function usage () {
     echo "  -p --prefix   <directory>      Install prefix for flatpak tooling (default: /usr/local)"
     echo "  -w --workdir  <directory>      The directory to perform builds in (default: 'work' subdirectory)"
     echo "  -l --logdir   <directory>      The directory in which to store build logs (default: Value of --workdir)"
-    echo "  -c --cron     <expression>     A cron expression indicating when the build should run (default: every day at Midnight)"
-    echo "  --cron-only                    Just update the cron job without trying to install/upgrade any system components"
+    echo "  -c --config   <filename>       Alternative configuration file (default: build.conf in this directory)"
+    echo "  --cron-expr   <expression>     A cron expression indicating when the build should run (default: every day at Midnight)"
     echo
 }
 
@@ -45,13 +45,13 @@ while : ; do
 	    arg_logdir=${2}
 	    shift 2 ;;
 
-	-c|--cron)
-	    arg_cron=${2}
+	-c|--config)
+	    arg_config=${2}
 	    shift 2 ;;
 
-	--cron-only)
-	    arg_cron_only=true
-	    shift ;;
+	--cron-expr)
+	    arg_cron=${2}
+	    shift 2 ;;
 
 	*)
 	    break ;;
@@ -75,6 +75,16 @@ if [ -z "${arg_logdir}" ]; then
 else
     arg_logdir="$(cd ${arg_logdir} && pwd)"
 fi
+
+if [ ! -f "${arg_config}" ]; then
+    echo "Specified config file '${arg_config}' does not exist"
+    echo
+    usage
+    exit 1
+fi
+
+# Make sure we have a full path to the configuration
+arg_config="$(realpath $arg_config)"
 
 # Import the build source mechanics, the flatpak sources and the build config
 . ${topdir}/include/build-source.sh
@@ -109,6 +119,7 @@ function ensureUpdateCron () {
     #
     sed -e "s|@@TOPDIR@@|${topdir}|g" \
         -e "s|@@PREFIX@@|${build_source_prefix}|g" \
+        -e "s|@@CONFIG@@|${arg_config}|g" \
         -e "s|@@WORKDIR@@|${build_source_workdir}|g" \
         -e "s|@@LOGDIR@@|${arg_logdir}|g" \
 	${topdir}/include/build-launcher.sh.in > ${topdir}/build-launcher.sh
@@ -122,11 +133,9 @@ function ensureUpdateCron () {
 #
 # Main
 #
-if ! $arg_cron_only; then
-    installPackages
+installPackages
 
-    buildSourceDownloadSources
-    buildSourceBuildSources
-fi
+buildSourceDownloadSources
+buildSourceBuildSources
 
 ensureUpdateCron

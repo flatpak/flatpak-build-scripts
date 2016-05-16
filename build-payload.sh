@@ -12,6 +12,8 @@ build_source_workdir=${topdir}/work
 build_source_force=false
 build_source_arch=$(flatpak --default-arch)
 build_source_target=
+build_source_config=${topdir}/build.conf
+
 
 function usage () {
     echo "Usage: "
@@ -22,6 +24,7 @@ function usage () {
     echo "Options:"
     echo
     echo "  -h --help                      Display this help message and exit"
+    echo "  -c --config   <filename>       Alternative configuration file (default: build.conf in this directory)"
     echo "  -a --arch     <arch-name>      Host compatible cpu architecture to build for (default: The native arch)"
     echo "  -w --workdir  <directory>      The directory to perform builds in (default: 'work' subdirectory)"
     echo "  -t --target   <modulename>     Specify which module to process, otherwise processes all modules"
@@ -53,6 +56,10 @@ while : ; do
 	    build_source_target=${2}
 	    shift 2 ;;
 
+	-c|--config)
+	    build_source_config=${2}
+	    shift 2 ;;
+
 	-f|--force)
 	    build_source_force=true
 	    shift ;;
@@ -67,6 +74,13 @@ done
 if [ ! -z "${arg_workdir}" ]; then
     mkdir -p "${arg_workdir}" || dienow "Failed to create work directory: ${arg_workdir}"
     build_source_workdir="$(cd ${arg_workdir} && pwd)"
+fi
+
+if [ ! -f "${build_source_config}" ]; then
+    echo "Specified config file '${build_source_config}' does not exist"
+    echo
+    usage
+    exit 1
 fi
 
 # Import the build source mechanics, the flatpak sources and the build config
@@ -93,7 +107,7 @@ declare -A APP_VERSION
 declare -A APP_ASSETS
 
 # Source the config, populate the various types of builds
-. ${topdir}/build.conf
+. ${build_source_config}
 
 #
 # Add the build sources defined in build.conf

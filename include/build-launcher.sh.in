@@ -12,7 +12,7 @@ echo "====================================================" >> $logfile
 # Just manually time it in seconds
 #
 startime=$(date +%s)
-@@TOPDIR@@/build-payload.sh -w @@WORKDIR@@ >> $logfile
+@@TOPDIR@@/build-payload.sh --workdir @@WORKDIR@@ --config @@CONFIG@@ >> $logfile
 error_code=$?
 endtime=$(date +%s)
 
