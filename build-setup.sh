@@ -103,9 +103,9 @@ ubuntu_packages=(git build-essential python diffstat gawk chrpath texinfo bison 
 #
 # Sources that we build
 #
-buildSourceAdd "libgsystem" "git://git.gnome.org/libgsystem"          "master" buildInstallAutotools
-buildSourceAdd "ostree"     "git://git.gnome.org/ostree"              "master" buildInstallAutotools
-buildSourceAdd "xdg-app"    "https://github.com/gtristan/xdg-app.git" "master" buildInstallAutotools
+buildSourceAdd "libgsystem" "git://git.gnome.org/libgsystem"                "master" buildInstallAutotools
+buildSourceAdd "ostree"     "git://git.gnome.org/ostree"                    "master" buildInstallAutotools
+buildSourceAdd "xdg-app"    "git://anongit.freedesktop.org/xdg-app/xdg-app" "master" buildInstallAutotools
 
 if $arg_no_seccomp; then
     build_source_extra_configure["xdg-app"]="--disable-seccomp"
