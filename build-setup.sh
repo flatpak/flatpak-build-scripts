@@ -9,6 +9,7 @@ arg_workdir=${topdir}/work
 arg_logdir=
 arg_config=${topdir}/build.conf
 arg_schedule=
+arg_with_apache=false
 
 function usage () {
     echo "Usage: "
@@ -30,6 +31,7 @@ function usage () {
     echo "  -l --logdir   <directory>      The directory in which to store build logs (default: Value of --workdir)"
     echo "  -c --config   <filename>       Alternative configuration file (default: build.conf in this directory)"
     echo "  -s --schedule <expression>     A cron expression indicating when the build should run (default: no cron jobs)"
+    echo "  --with-apache                  Install and setup an apache server to host the builds and logs"
     echo
 }
 
@@ -64,6 +66,10 @@ while : ; do
 	    arg_schedule=${2}
 	    shift 2 ;;
 
+	--with-apache)
+	    arg_with_apache=true
+	    shift ;;
+
 	*)
 	    break ;;
     esac
@@ -74,6 +80,7 @@ done
 #
 mkdir -p "${arg_tooldir}" || dienow "Failed to create tools directory: ${arg_tooldir}"
 mkdir -p "${arg_workdir}" || dienow "Failed to create work directory: ${arg_workdir}"
+mkdir -p "${arg_workdir}/export"
 arg_prefix="$(cd ${arg_prefix} && pwd)"
 arg_tooldir="$(cd ${arg_tooldir} && pwd)"
 arg_workdir="$(cd ${arg_workdir} && pwd)"
@@ -106,12 +113,16 @@ build_source_prefix=${arg_prefix}
 #
 # Packages required on Ubuntu 16.04
 #
-ubuntu_packages=(git build-essential python diffstat gawk chrpath texinfo bison unzip emacs
+ubuntu_packages=(git build-essential python diffstat gawk chrpath texinfo bison unzip
 		 dh-autoreconf gobject-introspection gtk-doc-tools gnome-doc-utils
 		 libattr1-dev libcap-dev libglib2.0-dev liblzma-dev e2fslibs-dev
 		 libgpg-error-dev libgpgme11-dev libfuse-dev libarchive-dev
 		 libgirepository1.0-dev libxau-dev libjson-glib-dev libpolkit-gobject-1-dev
 		 libseccomp-dev elfutils libelf-dev libdwarf-dev libsoup2.4-dev)
+
+if $arg_with_apache; then
+    ubuntu_packages+=(apache2)
+fi
 
 #
 # Sources that we build
@@ -143,6 +154,31 @@ function ensureBuildSchedule () {
     cat <(fgrep -i -v "build-launcher" <(crontab -l)) <(echo "$job") | crontab -
 }
 
+function configureApache () {
+    apache_data="${topdir}/data/apache"
+    apache_dir="/etc/apache2"
+    apache_conf="${apache_dir}/apache2.conf"
+    apache_site="${apache_dir}/sites-available/000-default.conf"
+    apache_ssl="${apache_dir}/sites-available/default-ssl.conf"
+    export_dir="${arg_workdir}/export"
+
+    if [ ! -f "${apache_conf}" ] || [ ! -f "${apache_conf}" ] || [ ! -f "${apache_ssl}" ]; then
+	echo "Unrecognized apache server; not setting up apache"
+	return
+    fi
+
+    # Configure apache to serve our build results
+    #
+    sed -e "s|@@SITE_ROOT@@|${export_dir}|g" ${apache_data}/apache2.conf.in     | sudo tee ${apache_conf} > /dev/null
+    sed -e "s|@@SITE_ROOT@@|${export_dir}|g" ${apache_data}/000-default.conf.in | sudo tee ${apache_site} > /dev/null
+    sed -e "s|@@SITE_ROOT@@|${export_dir}|g" ${apache_data}/default-ssl.conf.in | sudo tee ${apache_ssl}  > /dev/null
+
+    # Restart with new config
+    #
+    echo "Restarting apache server to serve build results at: ${export_dir}"
+    sudo service apache2 restart
+}
+
 #
 # Main
 #
@@ -153,4 +189,8 @@ buildSourceRun
 # Scheduling the job is optional
 if [ ! -z "${arg_schedule}" ]; then
     ensureBuildSchedule
+fi
+
+if $arg_with_apache; then
+    configureApache
 fi
