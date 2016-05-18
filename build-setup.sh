@@ -3,9 +3,10 @@
 topdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # default options
+arg_prefix=/usr/local
+arg_tooldir=${topdir}/tools
 arg_workdir=${topdir}/work
 arg_logdir=
-arg_prefix=/usr/local
 arg_config=${topdir}/build.conf
 arg_schedule=
 
@@ -13,12 +14,18 @@ function usage () {
     echo "Usage: "
     echo "  build-setup.sh [OPTIONS]"
     echo
-    echo "Build and install dependencies required for building the flatpak SDKs and application bundles"
+    echo "Setup a build machine for building flatpak."
+    echo
+    echo "This script will ensure all system dependencies are installed, build flatpak and some"
+    echo "of it's dependencies and optionally schedule a cron job to automatically run the builds."
+    echo
+    echo "Note: This script will use sudo and prompt for a password"
     echo
     echo "Options:"
     echo
     echo "  -h --help                      Display this help message and exit"
     echo "  -p --prefix   <directory>      Install prefix for flatpak tooling (default: /usr/local)"
+    echo "  -t --tooldir  <directory>      The directory to perform builds of system tooling in (default: 'tools' subdirectory)"
     echo "  -w --workdir  <directory>      The directory to perform builds in (default: 'work' subdirectory)"
     echo "  -l --logdir   <directory>      The directory in which to store build logs (default: Value of --workdir)"
     echo "  -c --config   <filename>       Alternative configuration file (default: build.conf in this directory)"
@@ -35,6 +42,10 @@ while : ; do
 
 	-p|--prefix)
 	    arg_prefix=${2}
+	    shift 2 ;;
+
+	-t|--tooldir)
+	    arg_tooldir=${2}
 	    shift 2 ;;
 
 	-w|--workdir)
@@ -58,14 +69,17 @@ while : ; do
     esac
 done
 
-# Get the absolute path to the work directory and install prefix
 #
+# Option sanity checks
+#
+mkdir -p "${arg_tooldir}" || dienow "Failed to create tools directory: ${arg_tooldir}"
 mkdir -p "${arg_workdir}" || dienow "Failed to create work directory: ${arg_workdir}"
-build_source_workdir="$(cd ${arg_workdir} && pwd)"
-build_source_prefix="$(cd ${arg_prefix} && pwd)"
+arg_prefix="$(cd ${arg_prefix} && pwd)"
+arg_tooldir="$(cd ${arg_tooldir} && pwd)"
+arg_workdir="$(cd ${arg_workdir} && pwd)"
 
 if [ -z "${arg_logdir}" ]; then
-    arg_logdir=${build_source_workdir}
+    arg_logdir=${arg_workdir}
 else
     arg_logdir="$(cd ${arg_logdir} && pwd)"
 fi
@@ -79,6 +93,11 @@ fi
 
 # Make sure we have a full path to the configuration
 arg_config="$(realpath $arg_config)"
+
+# Prepare the build source logic, we're building in tooldir
+# and installing into the prefix
+build_source_workdir=${arg_tooldir}
+build_source_prefix=${arg_prefix}
 
 # Import the build source mechanics, the flatpak sources and the build config
 . ${topdir}/include/build-source.sh
