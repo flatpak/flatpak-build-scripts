@@ -7,7 +7,7 @@ arg_workdir=${topdir}/work
 arg_logdir=
 arg_prefix=/usr/local
 arg_config=${topdir}/build.conf
-arg_cron="0 0 * * *"
+arg_schedule=
 
 function usage () {
     echo "Usage: "
@@ -22,7 +22,7 @@ function usage () {
     echo "  -w --workdir  <directory>      The directory to perform builds in (default: 'work' subdirectory)"
     echo "  -l --logdir   <directory>      The directory in which to store build logs (default: Value of --workdir)"
     echo "  -c --config   <filename>       Alternative configuration file (default: build.conf in this directory)"
-    echo "  --cron-expr   <expression>     A cron expression indicating when the build should run (default: every day at Midnight)"
+    echo "  -s --schedule <expression>     A cron expression indicating when the build should run (default: no cron jobs)"
     echo
 }
 
@@ -49,8 +49,8 @@ while : ; do
 	    arg_config=${2}
 	    shift 2 ;;
 
-	--cron-expr)
-	    arg_cron=${2}
+	-s|--schedule)
+	    arg_schedule=${2}
 	    shift 2 ;;
 
 	*)
@@ -106,7 +106,7 @@ function installPackages() {
     sudo apt-get install "${ubuntu_packages[@]}"
 }
 
-function ensureUpdateCron () {
+function ensureBuildSchedule () {
     # Create the launch script based on our current configuration
     # and ensure that there is an entry in the user's crontab for
     # the launcher.
@@ -120,7 +120,7 @@ function ensureUpdateCron () {
 
     chmod +x ${topdir}/build-launcher.sh
 
-    job="${arg_cron} ${topdir}/build-launcher.sh"
+    job="${arg_schedule} ${topdir}/build-launcher.sh"
     cat <(fgrep -i -v "build-launcher" <(crontab -l)) <(echo "$job") | crontab -
 }
 
@@ -131,4 +131,7 @@ installPackages
 
 buildSourceRun
 
-ensureUpdateCron
+# Scheduling the job is optional
+if [ ! -z "${arg_schedule}" ]; then
+    ensureBuildSchedule
+fi
