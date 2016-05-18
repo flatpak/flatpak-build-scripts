@@ -81,11 +81,9 @@ fi
 
 build_source_force=${arg_force}
 
-# Import the build source mechanics, the flatpak sources and the build config
-. ${topdir}/include/build-source.sh
-. ${topdir}/include/build-source-flatpak.sh
-
+#
 # Declare arrays used in the config file
+#
 BASE_SDK_LIST=()
 declare -A BASE_SDK_REPO
 declare -A BASE_SDK_BRANCH
@@ -107,7 +105,7 @@ declare -A APP_ASSETS
 # Source the config, populate the various types of builds
 . ${arg_config}
 
-# Resolve target architecture
+# Resolve target architecture, which may be specified in the config
 if [ ! -z "${arg_arch}" ]; then
     # From command line
     build_source_arch=${arg_arch}
@@ -118,6 +116,12 @@ else
     # Automatically guessed
     build_source_arch=$(flatpak --default-arch)
 fi
+
+#
+# Import the build source mechanics once the config has been loaded
+#
+. ${topdir}/include/build-source.sh
+. ${topdir}/include/build-source-flatpak.sh
 
 #
 # Add the build sources defined in build.conf
