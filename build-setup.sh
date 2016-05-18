@@ -8,7 +8,6 @@ arg_logdir=
 arg_prefix=/usr/local
 arg_config=${topdir}/build.conf
 arg_cron="0 0 * * *"
-arg_no_seccomp=false
 
 function usage () {
     echo "Usage: "
@@ -23,7 +22,6 @@ function usage () {
     echo "  -w --workdir  <directory>      The directory to perform builds in (default: 'work' subdirectory)"
     echo "  -l --logdir   <directory>      The directory in which to store build logs (default: Value of --workdir)"
     echo "  -c --config   <filename>       Alternative configuration file (default: build.conf in this directory)"
-    echo "  --no-seccomp                   Disable usage of seccomp in flatpak"
     echo "  --cron-expr   <expression>     A cron expression indicating when the build should run (default: every day at Midnight)"
     echo
 }
@@ -54,10 +52,6 @@ while : ; do
 	--cron-expr)
 	    arg_cron=${2}
 	    shift 2 ;;
-
-	--no-seccomp)
-	    arg_no_seccomp=true
-	    shift ;;
 
 	*)
 	    break ;;
@@ -106,10 +100,6 @@ ubuntu_packages=(git build-essential python diffstat gawk chrpath texinfo bison 
 buildSourceAdd "libgsystem" "git://git.gnome.org/libgsystem"                "master" buildInstallAutotools
 buildSourceAdd "ostree"     "git://git.gnome.org/ostree"                    "master" buildInstallAutotools
 buildSourceAdd "xdg-app"    "git://anongit.freedesktop.org/xdg-app/xdg-app" "master" buildInstallAutotools
-
-if $arg_no_seccomp; then
-    build_source_extra_configure["xdg-app"]="--disable-seccomp"
-fi
 
 function installPackages() {
     echo "Ensuring we have the packages we need..."
