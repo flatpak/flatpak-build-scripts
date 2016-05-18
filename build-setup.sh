@@ -146,7 +146,7 @@ function ensureBuildSchedule () {
         -e "s|@@CONFIG@@|${arg_config}|g" \
         -e "s|@@WORKDIR@@|${arg_workdir}|g" \
         -e "s|@@LOGDIR@@|${arg_logdir}|g" \
-	${topdir}/include/build-launcher.sh.in > ${topdir}/build-launcher.sh
+	${topdir}/data/build-launcher.sh.in > ${topdir}/build-launcher.sh
 
     chmod +x ${topdir}/build-launcher.sh
 
