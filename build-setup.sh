@@ -6,7 +6,6 @@ topdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 arg_prefix=/usr/local
 arg_tooldir=${topdir}/tools
 arg_workdir=${topdir}/work
-arg_logdir=
 arg_config=${topdir}/build.conf
 arg_schedule=
 arg_with_apache=false
@@ -28,7 +27,6 @@ function usage () {
     echo "  -p --prefix   <directory>      Install prefix for flatpak tooling (default: /usr/local)"
     echo "  -t --tooldir  <directory>      The directory to perform builds of system tooling in (default: 'tools' subdirectory)"
     echo "  -w --workdir  <directory>      The directory to perform builds in (default: 'work' subdirectory)"
-    echo "  -l --logdir   <directory>      The directory in which to store build logs (default: Value of --workdir)"
     echo "  -c --config   <filename>       Alternative configuration file (default: build.conf in this directory)"
     echo "  -s --schedule <expression>     A cron expression indicating when the build should run (default: no cron jobs)"
     echo "  --with-apache                  Install and setup an apache server to host the builds and logs"
@@ -52,10 +50,6 @@ while : ; do
 
 	-w|--workdir)
 	    arg_workdir=${2}
-	    shift 2 ;;
-
-	-l|--logdir)
-	    arg_logdir=${2}
 	    shift 2 ;;
 
 	-c|--config)
@@ -84,12 +78,6 @@ mkdir -p "${arg_workdir}/export"
 arg_prefix="$(cd ${arg_prefix} && pwd)"
 arg_tooldir="$(cd ${arg_tooldir} && pwd)"
 arg_workdir="$(cd ${arg_workdir} && pwd)"
-
-if [ -z "${arg_logdir}" ]; then
-    arg_logdir=${arg_workdir}
-else
-    arg_logdir="$(cd ${arg_logdir} && pwd)"
-fi
 
 if [ ! -f "${arg_config}" ]; then
     echo "Specified config file '${arg_config}' does not exist"
@@ -145,7 +133,6 @@ function ensureBuildSchedule () {
         -e "s|@@PREFIX@@|${build_source_prefix}|g" \
         -e "s|@@CONFIG@@|${arg_config}|g" \
         -e "s|@@WORKDIR@@|${arg_workdir}|g" \
-        -e "s|@@LOGDIR@@|${arg_logdir}|g" \
 	${topdir}/data/build-launcher.sh.in > ${topdir}/build-launcher.sh
 
     chmod +x ${topdir}/build-launcher.sh

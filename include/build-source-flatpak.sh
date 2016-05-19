@@ -3,6 +3,7 @@
 
 flatpak_remote_args="--user --no-gpg-verify"
 flatpak_install_args="--user --arch=${build_source_arch}"
+flatpak_builder_args="--force-clean --ccache --require-changes --repo=repo --arch=${build_source_arch}"
 
 #
 # Ensures a remote exists and points to
@@ -53,9 +54,18 @@ function flatpakInstallAsset() {
     flatpak install ${flatpak_install_args} ${module} ${asset} ${branch}
     error_code=$?
 
-    if [ "$?" -ne "0" ]; then
+    if [ "${error_code}" -ne "0" ]; then
 	flatpak update ${flatpak_install_args} ${asset} ${branch} || \
 	    dienow "Failed to install or update: ${asset}/${branch} from remote ${module}"
+    fi
+}
+
+function flatpakAnnounceBuild() {
+    local module=$1
+
+    echo "Commencing build of ${module}"
+    if [ ! -z "${build_source_logdir}" ]; then
+	echo "Logging build in build-${module}.log"
     fi
 }
 
@@ -69,9 +79,14 @@ function buildInstallFlatpakBase() {
     local moduledir="${build_source_workdir}/${module}"
 
     # Build freedesktop-sdk-base or error out
-    echo "Building in ${module}"
+    flatpakAnnounceBuild "${module}"
+
     cd "${moduledir}" || dienow
-    make ARCH=${build_source_arch} || dienow
+    if [ ! -z "${build_source_logdir}" ]; then
+	make ARCH=${build_source_arch} > "${build_source_logdir}/build-${module}.log" 2>&1 || dienow
+    else
+	make ARCH=${build_source_arch} || dienow
+    fi
 
     # Ensure there is a remote
     flatpakEnsureRemote "${module}" "file://${moduledir}/repo"
@@ -92,9 +107,14 @@ function buildInstallFlatpakSdk() {
     local moduledir="${build_source_workdir}/${module}"
 
     # Build the sdk or error out
-    echo "Building in ${module}"
+    flatpakAnnounceBuild "${module}"
+
     cd "${moduledir}" || dienow
-    make ARCH=${build_source_arch} || dienow
+    if [ ! -z "${build_source_logdir}" ]; then
+	make ARCH=${build_source_arch} > "${build_source_logdir}/build-${module}.log" 2>&1 || dienow
+    else
+	make ARCH=${build_source_arch} || dienow
+    fi
 
     # Ensure there is a remote
     flatpakEnsureRemote "${module}" "file://${moduledir}/repo"
@@ -113,6 +133,7 @@ function buildInstallFlatpakApps() {
     local moduledir="${build_source_workdir}/${module}"
     local app_id=
     local app_dir="${moduledir}/app"
+    local error_code
 
     # failing a build here is non-fatal, we want to try to
     # build all the apps even if some fail.
@@ -120,10 +141,22 @@ function buildInstallFlatpakApps() {
     for file in *.json; do
 	app_id=$(basename $file .json)
 
-	echo "========== Building $app_id ================"
+	flatpakAnnounceBuild "${app_id}"
+
 	rm -rf ${app_dir}
-	flatpak-builder --force-clean --ccache --require-changes --repo=repo --arch=${build_source_arch} \
-                        --subject="Nightly build of ${APPID}, `date`" \
-                        ${app_dir} $file || echo "Failed to build ${app_id}"
+	if [ ! -z "${build_source_logdir}" ]; then
+	    flatpak-builder ${flatpak_builder_args} --subject="Nightly build of ${app_id}, `date`" \
+                            ${app_dir} $file > "${build_source_logdir}/build-${app_id}.log" 2>&1
+	else
+	    flatpak-builder ${flatpak_builder_args} --subject="Nightly build of ${app_id}, `date`" \
+                            ${app_dir} $file
+	fi
+
+	error_code=$?
+	if [ "${error_code}" -ne "0" ]; then
+	    echo "Failed to build ${app_id}"
+	fi
+
+	rm -rf ${app_dir}
     done
 }

@@ -8,11 +8,12 @@ if [ -z "$(which flatpak)" ]; then
 fi
 
 # default options
-arg_workdir=${topdir}/work
 arg_config=${topdir}/build.conf
 arg_arch=
-arg_force=false
+arg_workdir=${topdir}/work
+arg_logdir=
 arg_target=
+arg_force=false
 
 function usage () {
     echo "Usage: "
@@ -26,6 +27,7 @@ function usage () {
     echo "  -c --config   <filename>       Alternative configuration file (default: build.conf in this directory)"
     echo "  -a --arch     <arch-name>      Host compatible cpu architecture to build for (default: The native arch)"
     echo "  -w --workdir  <directory>      The directory to perform builds in (default: 'work' subdirectory)"
+    echo "  -l --logdir   <directory>      Directory to log output of individual builds (default: stdout/stderr)"
     echo "  -t --target   <modulename>     Specify which module to process, otherwise processes all modules"
     echo "  -f --force                     Use brute force, sometimes wiping directories clean when required"
     echo
@@ -50,6 +52,10 @@ while : ; do
 	    arg_workdir=${2}
 	    shift 2 ;;
 
+	-l|--logdir)
+	    arg_logdir=${2}
+	    shift 2 ;;
+
 	-t|--target)
 	    arg_target=${2}
 	    shift 2 ;;
@@ -72,6 +78,11 @@ done
 mkdir -p "${arg_workdir}" || dienow "Failed to create work directory: ${arg_workdir}"
 build_source_workdir="$(cd ${arg_workdir} && pwd)"
 
+if [ ! -z "${arg_logdir}" ]; then
+    mkdir -p "${arg_logdir}" || dienow "Failed to create log directory: ${arg_logdir}"
+    build_source_logdir="$(cd ${arg_logdir} && pwd)"
+fi
+
 if [ ! -f "${arg_config}" ]; then
     echo "Specified config file '${arg_config}' does not exist"
     echo
@@ -80,6 +91,7 @@ if [ ! -f "${arg_config}" ]; then
 fi
 
 build_source_force=${arg_force}
+
 
 #
 # Declare arrays used in the config file
