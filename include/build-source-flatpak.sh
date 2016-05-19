@@ -66,7 +66,7 @@ function flatpakAnnounceBuild() {
 
     echo "Commencing build of ${module}"
     if [ ! -z "${build_source_logdir}" ]; then
-	echo "Logging build in build-${module}.log"
+	echo "Logging build in build-${module}.txt"
     fi
 }
 
@@ -84,7 +84,7 @@ function buildInstallFlatpakBase() {
 
     cd "${moduledir}" || dienow
     if [ ! -z "${build_source_logdir}" ]; then
-	make ARCH=${build_source_arch} REPO=${flatpak_repo} > "${build_source_logdir}/build-${module}.log" 2>&1 || dienow
+	make ARCH=${build_source_arch} REPO=${flatpak_repo} > "${build_source_logdir}/build-${module}.txt" 2>&1 || dienow
     else
 	make ARCH=${build_source_arch} REPO=${flatpak_repo} || dienow
     fi
@@ -112,7 +112,7 @@ function buildInstallFlatpakSdk() {
 
     cd "${moduledir}" || dienow
     if [ ! -z "${build_source_logdir}" ]; then
-	make ARCH=${build_source_arch} REPO=${flatpak_repo} > "${build_source_logdir}/build-${module}.log" 2>&1 || dienow
+	make ARCH=${build_source_arch} REPO=${flatpak_repo} > "${build_source_logdir}/build-${module}.txt" 2>&1 || dienow
     else
 	make ARCH=${build_source_arch} REPO=${flatpak_repo} || dienow
     fi
@@ -147,7 +147,7 @@ function buildInstallFlatpakApps() {
 	rm -rf ${app_dir}
 	if [ ! -z "${build_source_logdir}" ]; then
 	    flatpak-builder ${flatpak_builder_args} --subject="Nightly build of ${app_id}, `date`" \
-                            ${app_dir} $file > "${build_source_logdir}/build-${app_id}.log" 2>&1
+                            ${app_dir} $file > "${build_source_logdir}/build-${app_id}.txt" 2>&1
 	else
 	    flatpak-builder ${flatpak_builder_args} --subject="Nightly build of ${app_id}, `date`" \
                             ${app_dir} $file

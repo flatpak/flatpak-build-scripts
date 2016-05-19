@@ -4,7 +4,7 @@
 export PATH=@@PREFIX@@/bin:$PATH
 
 logdir=@@WORKDIR@@/export/logs/build-$(date +%Y-%m-%e-%H%M%S)
-logfile=${logdir}/build.log
+logfile=${logdir}/build.txt
 
 mkdir -p "${logdir}"
 
