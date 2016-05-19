@@ -6,6 +6,8 @@ export PATH=@@PREFIX@@/bin:$PATH
 logdir=@@WORKDIR@@/export/logs/build-$(date +%Y-%m-%e-%H%M%S)
 logfile=${logdir}/build.log
 
+mkdir -p "${logdir}"
+
 echo "====================================================" >> $logfile
 echo "Starting build at `date`" >> $logfile
 echo "====================================================" >> $logfile
