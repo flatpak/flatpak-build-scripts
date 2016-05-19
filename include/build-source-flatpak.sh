@@ -1,9 +1,10 @@
 # A build source to build a few known
 # types of flatpak related repository structures
 
+flatpak_repo="${build_source_workdir}/export/repo"
 flatpak_remote_args="--user --no-gpg-verify"
 flatpak_install_args="--user --arch=${build_source_arch}"
-flatpak_builder_args="--force-clean --ccache --require-changes --repo=repo --arch=${build_source_arch}"
+flatpak_builder_args="--force-clean --ccache --require-changes --repo=${flatpak_repo} --arch=${build_source_arch}"
 
 #
 # Ensures a remote exists and points to
@@ -83,9 +84,9 @@ function buildInstallFlatpakBase() {
 
     cd "${moduledir}" || dienow
     if [ ! -z "${build_source_logdir}" ]; then
-	make ARCH=${build_source_arch} > "${build_source_logdir}/build-${module}.log" 2>&1 || dienow
+	make ARCH=${build_source_arch} REPO=${flatpak_repo} > "${build_source_logdir}/build-${module}.log" 2>&1 || dienow
     else
-	make ARCH=${build_source_arch} || dienow
+	make ARCH=${build_source_arch} REPO=${flatpak_repo} || dienow
     fi
 
     # Ensure there is a remote
@@ -111,9 +112,9 @@ function buildInstallFlatpakSdk() {
 
     cd "${moduledir}" || dienow
     if [ ! -z "${build_source_logdir}" ]; then
-	make ARCH=${build_source_arch} > "${build_source_logdir}/build-${module}.log" 2>&1 || dienow
+	make ARCH=${build_source_arch} REPO=${flatpak_repo} > "${build_source_logdir}/build-${module}.log" 2>&1 || dienow
     else
-	make ARCH=${build_source_arch} || dienow
+	make ARCH=${build_source_arch} REPO=${flatpak_repo} || dienow
     fi
 
     # Ensure there is a remote

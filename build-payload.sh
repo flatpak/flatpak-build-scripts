@@ -90,6 +90,9 @@ if [ ! -f "${arg_config}" ]; then
     exit 1
 fi
 
+# Ensure the export directory just in case
+mkdir -p "${arg_workdir}/export" || dienow "Failed to create export directory: ${arg_workdir}/export"
+
 build_source_force=${arg_force}
 
 
