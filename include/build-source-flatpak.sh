@@ -1,6 +1,7 @@
 # A build source to build a few known
 # types of flatpak related repository structures
 
+flatpak_remote="builds"
 flatpak_repo="${build_source_workdir}/export/repo"
 flatpak_remote_args="--user --no-gpg-verify"
 flatpak_install_args="--user --arch=${build_source_arch}"
@@ -8,43 +9,41 @@ flatpak_builder_args="--force-clean --ccache --require-changes --repo=${flatpak_
 
 #
 # Ensures a remote exists and points to
-# the correct repo
-#  $1 The remote name to ensure
-#  $2 The repo path
+# the common repo
 #
 function flatpakEnsureRemote() {
-    local module=$1
-    local repo=$2
     local error_code
+    local repo_url="file://${flatpak_repo}"
 
-    flatpak remote-add ${flatpak_remote_args} ${module} ${repo}
+    echo "Ensuring the global remote exists and points to: ${repo_url}"
+    flatpak remote-add ${flatpak_remote_args} ${flatpak_remote} ${repo_url} > /dev/null 2>&1
     error_code=$?
 
     # If it errors, assume it's because it exists
     if [ "${error_code}" -ne "0" ]; then
-	flatpak remote-modify ${flatpak_remote_args} ${module} --url ${repo}
+	flatpak remote-modify ${flatpak_remote_args} ${flatpak_remote} --url ${repo_url} > /dev/null 2>&1
 	error_code=$?
 
 	# If it exists, just update it's remote uri
 	if [ "${error_code}" -ne "0" ]; then
 
 	    # This shouldnt happen
-	    dienow "Failed to ensure remote ${module} at repo: ${repo}"
+	    dienow "Failed to ensure our global remote at: ${repo_url}"
 	fi
     fi
 }
 
 #
-# Installs an asset into the remote for the given module
-#  $1 The module
-#  $2 The asset to install
-#  $3 The version/branch to install
+# Installs an asset into the remote
+#  $1 The asset to install
+#  $2 The version/branch to install
 #
 function flatpakInstallAsset() {
-    local module=$1
-    local asset=$2
-    local branch=$3
+    local asset=$1
+    local branch=$2
     local error_code
+
+    echo "Installing asset ${asset} at branch ${branch}"
 
     # Dont specify the branch when it's master
     if [ "${branch}" == "master" ]; then
@@ -52,12 +51,12 @@ function flatpakInstallAsset() {
     fi
 
     # If install reports an error it's probably installed, try an upgrade in that case.
-    flatpak install ${flatpak_install_args} ${module} ${asset} ${branch}
+    flatpak install ${flatpak_install_args} ${flatpak_remote} ${asset} ${branch} > /dev/null 2>&1
     error_code=$?
 
     if [ "${error_code}" -ne "0" ]; then
 	flatpak update ${flatpak_install_args} ${asset} ${branch} || \
-	    dienow "Failed to install or update: ${asset}/${branch} from remote ${module}"
+	    dienow "Failed to install or update: ${asset}/${branch} from remote ${flatpak_remote}"
     fi
 }
 
@@ -89,12 +88,10 @@ function buildInstallFlatpakBase() {
 	make ARCH=${build_source_arch} REPO=${flatpak_repo} || dienow
     fi
 
-    # Ensure there is a remote
-    flatpakEnsureRemote "${module}" "file://${moduledir}/repo"
-
-    # Install the assets
+    # Ensure there is a remote and install
+    flatpakEnsureRemote
     for asset in ${assets[@]}; do
-	flatpakInstallAsset "${module}" "${asset}" "${version}"
+	flatpakInstallAsset "${asset}" "${version}"
     done
 }
 
@@ -117,12 +114,10 @@ function buildInstallFlatpakSdk() {
 	make ARCH=${build_source_arch} REPO=${flatpak_repo} || dienow
     fi
 
-    # Ensure there is a remote
-    flatpakEnsureRemote "${module}" "file://${moduledir}/repo"
-
-    # Install the assets
+    # Ensure there is a remote and install
+    flatpakEnsureRemote
     for asset in ${assets[@]}; do
-	flatpakInstallAsset "${module}" "${asset}" "${version}"
+	flatpakInstallAsset "${asset}" "${version}"
     done
 }
 
