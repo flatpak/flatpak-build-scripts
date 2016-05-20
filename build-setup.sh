@@ -115,9 +115,9 @@ fi
 #
 # Sources that we build
 #
-buildSourceAdd "libgsystem" "git://git.gnome.org/libgsystem"                "master" buildInstallAutotools
-buildSourceAdd "ostree"     "git://git.gnome.org/ostree"                    "master" buildInstallAutotools
-buildSourceAdd "xdg-app"    "git://anongit.freedesktop.org/xdg-app/xdg-app" "master" buildInstallAutotools
+buildSourceAdd "libgsystem" "git://git.gnome.org/libgsystem"         "master" buildInstallAutotools
+buildSourceAdd "ostree"     "git://git.gnome.org/ostree"             "master" buildInstallAutotools
+buildSourceAdd "flatpak"    "https://github.com/flatpak/flatpak.git" "master" buildInstallAutotools
 
 function installPackages() {
     echo "Ensuring we have the packages we need..."
