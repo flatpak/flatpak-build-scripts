@@ -17,7 +17,7 @@ echo "====================================================" >> $logfile
 # We use a low priority for the build process to ensure that
 # apache's serving of logs and build results has priority over the builds.
 startime=$(date +%s)
-nice -n10 ionice -c2  @@TOPDIR@@/build-payload.sh --workdir @@WORKDIR@@ --config @@CONFIG@@ --logdir ${logdir} >> $logfile
+nice -n10 ionice -c2  @@TOPDIR@@/build-payload.sh --workdir @@WORKDIR@@ --config @@CONFIG@@ --logdir ${logdir} >> $logfile 2>&1
 error_code=$?
 endtime=$(date +%s)
 
