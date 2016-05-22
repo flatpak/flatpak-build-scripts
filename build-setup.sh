@@ -169,9 +169,9 @@ function configureApache () {
 #
 # Main
 #
-#installPackages
+installPackages
 
-#buildSourceRun
+buildSourceRun
 
 # Scheduling the job is optional
 if [ ! -z "${arg_schedule}" ]; then
