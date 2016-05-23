@@ -9,6 +9,7 @@ arg_workdir=${topdir}/work
 arg_config=${topdir}/build.conf
 arg_schedule=
 arg_with_apache=false
+arg_gpg_key=
 
 function usage () {
     echo "Usage: "
@@ -29,6 +30,7 @@ function usage () {
     echo "  -w --workdir  <directory>      The directory to perform builds in (default: 'work' subdirectory)"
     echo "  -c --config   <filename>       Alternative configuration file (default: build.conf in this directory)"
     echo "  -s --schedule <expression>     A cron expression indicating when the build should run (default: no cron jobs)"
+    echo "  --gpg-sign    <KEY-ID>         The gpg signing key ID"
     echo "  --with-apache                  Install and setup an apache server to host the builds and logs"
     echo
 }
@@ -63,6 +65,10 @@ while : ; do
 	--with-apache)
 	    arg_with_apache=true
 	    shift ;;
+
+	--gpg-sign)
+	    arg_gpg_key=${2}
+	    shift 2 ;;
 
 	*)
 	    break ;;
@@ -133,6 +139,7 @@ function ensureBuildSchedule () {
         -e "s|@@PREFIX@@|${build_source_prefix}|g" \
         -e "s|@@CONFIG@@|${arg_config}|g" \
         -e "s|@@WORKDIR@@|${arg_workdir}|g" \
+        -e "s|@@GPGKEY@@|${arg_gpg_key}|g" \
 	${topdir}/data/build-launcher.sh.in > ${topdir}/build-launcher.sh
 
     chmod +x ${topdir}/build-launcher.sh

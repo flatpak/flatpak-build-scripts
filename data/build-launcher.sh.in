@@ -12,12 +12,18 @@ echo "====================================================" >> $logfile
 echo "Starting build at `date`" >> $logfile
 echo "====================================================" >> $logfile
 
+gpg_key_id=@@GPGKEY@@
+gpg_arg=
+if [ ! -z "${gpg_key_id}" ]; then
+    gpg_arg="--gpg-sign ${gpg_key_id}"
+fi
+
 # Just manually time it in seconds
 #
 # We use a low priority for the build process to ensure that
 # apache's serving of logs and build results has priority over the builds.
 startime=$(date +%s)
-nice -n10 ionice -c2  @@TOPDIR@@/build-payload.sh --workdir @@WORKDIR@@ --config @@CONFIG@@ --logdir ${logdir} >> $logfile 2>&1
+nice -n10 ionice -c2  @@TOPDIR@@/build-payload.sh --workdir @@WORKDIR@@ --config @@CONFIG@@ --logdir ${logdir} ${gpg_arg} >> $logfile 2>&1
 error_code=$?
 endtime=$(date +%s)
 

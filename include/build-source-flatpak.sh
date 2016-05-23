@@ -5,7 +5,6 @@ flatpak_remote="builds"
 flatpak_repo="${build_source_workdir}/export/repo"
 flatpak_remote_args="--user --no-gpg-verify"
 flatpak_install_args="--user --arch=${build_source_arch}"
-flatpak_builder_args="--force-clean --ccache --require-changes --repo=${flatpak_repo} --arch=${build_source_arch}"
 
 #
 # Ensures a remote exists and points to
@@ -77,15 +76,22 @@ function buildInstallFlatpakBase() {
     local assets=(${BASE_SDK_ASSETS["${module}"]})
     local version=${BASE_SDK_VERSION["${module}"]}
     local moduledir="${build_source_workdir}/${module}"
+    args=()
 
     # Build freedesktop-sdk-base or error out
     flatpakAnnounceBuild "${module}"
-
     cd "${moduledir}" || dienow
+
+    args+=("ARCH=${build_source_arch}")
+    args+=("REPO=${flatpak_repo}")
+    if [ ! -z "${flatpak_gpg_key}" ]; then
+	args+=("GPG_ARGS=--gpg-sign=${flatpak_gpg_key}")
+    fi
+
     if [ ! -z "${build_source_logdir}" ]; then
-	make ARCH=${build_source_arch} REPO=${flatpak_repo} > "${build_source_logdir}/build-${module}.txt" 2>&1 || dienow
+	make "${args[@]}" > "${build_source_logdir}/build-${module}.txt" 2>&1 || dienow
     else
-	make ARCH=${build_source_arch} REPO=${flatpak_repo} || dienow
+	make "${args[@]}" || dienow
     fi
 
     # Ensure there is a remote and install
@@ -103,15 +109,22 @@ function buildInstallFlatpakSdk() {
     local assets=(${SDK_ASSETS["${module}"]})
     local version=${SDK_VERSION["${module}"]}
     local moduledir="${build_source_workdir}/${module}"
+    args=()
 
     # Build the sdk or error out
     flatpakAnnounceBuild "${module}"
-
     cd "${moduledir}" || dienow
+
+    args+=("ARCH=${build_source_arch}")
+    args+=("REPO=${flatpak_repo}")
+    if [ ! -z "${flatpak_gpg_key}" ]; then
+	args+=("EXPORT_ARGS=--gpg-sign=${flatpak_gpg_key}")
+    fi
+
     if [ ! -z "${build_source_logdir}" ]; then
-	make ARCH=${build_source_arch} REPO=${flatpak_repo} > "${build_source_logdir}/build-${module}.txt" 2>&1 || dienow
+	make "${args[@]}" > "${build_source_logdir}/build-${module}.txt" 2>&1 || dienow
     else
-	make ARCH=${build_source_arch} REPO=${flatpak_repo} || dienow
+	make "${args[@]}" || dienow
     fi
 
     # Ensure there is a remote and install
@@ -130,6 +143,16 @@ function buildInstallFlatpakApps() {
     local app_id=
     local app_dir="${moduledir}/app"
     local error_code
+    args=()
+
+    args+=("--force-clean")
+    args+=("--ccache")
+    args+=("--require-changes")
+    args+=("--repo=${flatpak_repo}")
+    args+=("--arch=${build_source_arch}")
+    if [ ! -z "${flatpak_gpg_key}" ]; then
+	args+=("--gpg-sign=${flatpak_gpg_key}")
+    fi
 
     # failing a build here is non-fatal, we want to try to
     # build all the apps even if some fail.
@@ -141,10 +164,10 @@ function buildInstallFlatpakApps() {
 
 	rm -rf ${app_dir}
 	if [ ! -z "${build_source_logdir}" ]; then
-	    flatpak-builder ${flatpak_builder_args} --subject="Nightly build of ${app_id}, `date`" \
+	    flatpak-builder "${args[@]}" --subject="Nightly build of ${app_id}, `date`" \
                             ${app_dir} $file > "${build_source_logdir}/build-${app_id}.txt" 2>&1
 	else
-	    flatpak-builder ${flatpak_builder_args} --subject="Nightly build of ${app_id}, `date`" \
+	    flatpak-builder "${args[@]}" --subject="Nightly build of ${app_id}, `date`" \
                             ${app_dir} $file
 	fi
 

@@ -14,6 +14,7 @@ arg_workdir=${topdir}/work
 arg_logdir=
 arg_target=
 arg_force=false
+arg_gpg_key=
 
 function usage () {
     echo "Usage: "
@@ -30,6 +31,7 @@ function usage () {
     echo "  -l --logdir   <directory>      Directory to log output of individual builds (default: stdout/stderr)"
     echo "  -t --target   <modulename>     Specify which module to process, otherwise processes all modules"
     echo "  -f --force                     Use brute force, sometimes wiping directories clean when required"
+    echo "  --gpg-sign    <KEY-ID>         The gpg signing key ID"
     echo
     echo "NOTE: Only host compatible architectures may be specified with --arch. Currently the supported"
     echo "      architectures include: i386, x86_64, aarch64 and arm. Use the --arch option to build a"
@@ -64,6 +66,10 @@ while : ; do
 	    arg_config=${2}
 	    shift 2 ;;
 
+	--gpg-sign)
+	    arg_gpg_key=${2}
+	    shift 2 ;;
+
 	-f|--force)
 	    arg_force=true
 	    shift ;;
@@ -77,6 +83,7 @@ done
 #
 mkdir -p "${arg_workdir}" || dienow "Failed to create work directory: ${arg_workdir}"
 build_source_workdir="$(cd ${arg_workdir} && pwd)"
+flatpak_gpg_key="${arg_gpg_key}"
 
 if [ ! -z "${arg_logdir}" ]; then
     mkdir -p "${arg_logdir}" || dienow "Failed to create log directory: ${arg_logdir}"
