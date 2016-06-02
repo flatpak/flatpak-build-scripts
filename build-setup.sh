@@ -129,6 +129,10 @@ ubuntu_packages=(git build-essential python diffstat gawk chrpath texinfo bison 
 		 libgirepository1.0-dev libxau-dev libjson-glib-dev libpolkit-gobject-1-dev
 		 libseccomp-dev elfutils libelf-dev libdwarf-dev libsoup2.4-dev)
 
+# IRC support
+ubuntu_packages+=(python-twisted)
+
+# Apache support
 if $arg_with_apache; then
     ubuntu_packages+=(apache2)
 fi

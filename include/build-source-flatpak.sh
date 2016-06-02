@@ -92,6 +92,7 @@ function buildInstallFlatpakBase() {
     local assets=(${BASE_SDK_ASSETS["${module}"]})
     local version=${BASE_SDK_VERSION["${module}"]}
     local moduledir="${build_source_workdir}/${module}"
+    local error_code
     args=()
 
     # Build freedesktop-sdk-base or error out
@@ -105,9 +106,19 @@ function buildInstallFlatpakBase() {
     fi
 
     if [ ! -z "${build_source_logdir}" ]; then
-	make "${args[@]}" > "${build_source_logdir}/build-${module}.txt" 2>&1 || dienow
+	make "${args[@]}" > "${build_source_logdir}/build-${module}.txt" 2>&1
     else
-	make "${args[@]}" || dienow
+	make "${args[@]}"
+    fi
+    error_code=$?
+
+    if [ "${error_code}" -ne "0" ]; then
+	notifyIrcTarget ${module} "fail" "build-${module}.txt" \
+			"Failed to build base runtime ${module}"
+	dienow
+    else
+	notifyIrcTarget ${module} "success" "build-${module}.txt" \
+			"Build of base runtime ${module} passed"
     fi
 
     # Ensure there is a remote and install
@@ -125,6 +136,7 @@ function buildInstallFlatpakSdk() {
     local assets=(${SDK_ASSETS["${module}"]})
     local version=${SDK_VERSION["${module}"]}
     local moduledir="${build_source_workdir}/${module}"
+    local error_code
     args=()
 
     # Build the sdk or error out
@@ -138,9 +150,19 @@ function buildInstallFlatpakSdk() {
     fi
 
     if [ ! -z "${build_source_logdir}" ]; then
-	make "${args[@]}" > "${build_source_logdir}/build-${module}.txt" 2>&1 || dienow
+	make "${args[@]}" > "${build_source_logdir}/build-${module}.txt" 2>&1
     else
-	make "${args[@]}" || dienow
+	make "${args[@]}"
+    fi
+    error_code=$?
+
+    if [ "${error_code}" -ne "0" ]; then
+	notifyIrcTarget ${module} "fail" "build-${module}.txt" \
+			"Failed to build SDK ${module}"
+	dienow
+    else
+	notifyIrcTarget ${module} "success" "build-${module}.txt" \
+			"Build of SDK ${module} passed"
     fi
 
     # Ensure there is a remote and install
@@ -189,7 +211,13 @@ function buildInstallFlatpakApps() {
 
 	error_code=$?
 	if [ "${error_code}" -ne "0" ]; then
+	    notifyIrcTarget ${module} "fail" "build-${app_id}.txt" \
+			    "Failed to build app ${app_id}"
 	    echo "Failed to build ${app_id}"
+	else
+	    notifyIrcTarget ${module} "success" "build-${app_id}.txt" \
+			    "Build of app ${module} passed"
+	    echo "Successfully built ${app_id}"
 	fi
 
 	rm -rf ${app_dir}

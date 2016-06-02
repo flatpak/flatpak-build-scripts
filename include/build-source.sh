@@ -23,6 +23,7 @@ build_source_modules=()
 declare -A build_source_repos
 declare -A build_source_branches
 declare -A build_source_funcs
+declare -A build_source_irc_targets
 
 #
 # The current module
@@ -56,17 +57,20 @@ function dienow() {
 #  $2 git repository url
 #  $3 the branch name of the git module
 #  $4 function to build with, like buildInstallAutotools()
+#  $5 IRC target id
 #
 function buildSourceAdd() {
     local module=$1
     local repo=$2
     local branch=$3
     local build_func=$4
+    local irc_target=$5
 
     build_source_modules+=("${module}")
     build_source_repos["${module}"]="$repo"
     build_source_branches["${module}"]="$branch"
     build_source_funcs["${module}"]=${build_func}
+    build_source_irc_targets["${module}"]="${irc_target}"
 }
 
 function buildSourceCheckout() {
@@ -186,4 +190,50 @@ function buildSourceRun() {
 	    buildSourceBuild "${module}"
 	done
     fi
+}
+
+#
+# Make an IRC announcement for the given module
+#  $1 module name, as listed in build.conf
+#  $2 message type, can be one of: regular,success,fail
+#  $3 build log short name (without ${build_source_logdir})
+#  $4 message to send
+#
+# The announcement will be made with the following format:
+#
+#   [ ${BUILD_ARCH} - ${BUILD_LABEL} ] <message>: Log file location
+#
+function notifyIrcTarget() {
+    local module=$1
+    local message_type=$2
+    local short_log=$3
+    local message=$4
+    local irc_target=${build_source_irc_targets["${module}"]}
+
+    # Just early return if this module is not configured for IRC notifications
+    if [ -z "${irc_target}" ]; then
+	return
+    fi
+
+    local irc_server=${IRC_TARGET_SERVER["${irc_target}"]}
+    local irc_port=${IRC_TARGET_PORT["${irc_target}"]}
+    local irc_channel=${IRC_TARGET_CHANNEL["${irc_target}"]}
+    local irc_nick=${IRC_TARGET_NICK["${irc_target}"]}
+    local irc_join=${IRC_TARGET_JOIN["${irc_target}"]}
+    local full_log=${BUILD_URL}/${build_source_logdir#${build_source_export}}/${short_log}
+    local full_message="[ ${BUILD_ARCH} - ${BUILD_LABEL} ] ${message}: ${full_log}"
+
+    args=()
+    args+=("-s ${irc_server}")
+    args+=("-p ${irc_port}")
+    args+=("-c ${irc_channel}")
+    args+=("-c ${irc_nick}")
+    if [ "${irc_join}" != "yes" ]; then
+	args+=("--nojoin")
+    fi
+
+    # Just launch it in the background, it can take a while and we
+    # can't really recover if it fails anyway.
+    #
+    ${topdir}/extra/irc-notify.py "${args[@]}" "${message}" > /dev/null 2>&1 &
 }

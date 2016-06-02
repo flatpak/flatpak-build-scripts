@@ -116,31 +116,12 @@ fi
 mkdir -p "${arg_workdir}/export" || dienow "Failed to create export directory: ${arg_workdir}/export"
 
 build_source_force=${arg_force}
+build_source_config=${arg_config}
+build_source_export="${arg_workdir}/export"
 
+# Now pull in the build configuration
+. ${topdir}/include/build-source-config.sh
 
-#
-# Declare arrays used in the config file
-#
-BASE_SDK_LIST=()
-declare -A BASE_SDK_REPO
-declare -A BASE_SDK_BRANCH
-declare -A BASE_SDK_VERSION
-declare -A BASE_SDK_ASSETS
-
-SDK_LIST=()
-declare -A SDK_REPO
-declare -A SDK_BRANCH
-declare -A SDK_VERSION
-declare -A SDK_ASSETS
-
-APP_LIST=()
-declare -A APP_REPO
-declare -A APP_BRANCH
-declare -A APP_VERSION
-declare -A APP_ASSETS
-
-# Source the config, populate the various types of builds
-. ${arg_config}
 
 # Resolve target architecture, which may be specified in the config
 if [ ! -z "${arg_arch}" ]; then
@@ -171,7 +152,8 @@ for src in "${BASE_SDK_LIST[@]}"; do
     buildSourceAdd "${src}" \
 		   ${BASE_SDK_REPO["${src}"]} \
 		   ${BASE_SDK_BRANCH["${src}"]} \
-		   buildInstallFlatpakBase
+		   buildInstallFlatpakBase \
+		   ${BASE_SDK_IRC_TARGET["${src}"]}
 done
 
 #
@@ -181,7 +163,8 @@ for src in "${SDK_LIST[@]}"; do
     buildSourceAdd "${src}" \
 		   ${SDK_REPO["${src}"]} \
 		   ${SDK_BRANCH["${src}"]} \
-		   buildInstallFlatpakSdk
+		   buildInstallFlatpakSdk \
+		   ${SDK_IRC_TARGET["${src}"]}
 done
 
 #
@@ -191,7 +174,8 @@ for src in "${APP_LIST[@]}"; do
     buildSourceAdd "${src}" \
 		   ${APP_REPO["${src}"]} \
 		   ${APP_BRANCH["${src}"]} \
-		   buildInstallFlatpakApps
+		   buildInstallFlatpakApps \
+		   ${APP_IRC_TARGET["${src}"]}
 done
 
 #
