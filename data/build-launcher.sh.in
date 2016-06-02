@@ -18,7 +18,7 @@
 # Make sure flatpack and ostree are available in the cron job's PATH
 export PATH=@@PREFIX@@/bin:$PATH
 
-logdir=@@WORKDIR@@/export/logs/build-$(date +%Y-%m-%e-%H%M%S)
+logdir=@@WORKDIR@@/export/logs/build-$(date +%Y-%m-%d-%H%M%S)
 logfile=${logdir}/build.txt
 
 mkdir -p "${logdir}"
