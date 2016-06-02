@@ -201,7 +201,7 @@ function buildSourceRun() {
 #
 # The announcement will be made with the following format:
 #
-#   [ ${BUILD_ARCH} - ${BUILD_LABEL} ] <message>: Log file location
+#   [ ${build_source_arch} ] <message>: Log file location
 #
 function notifyIrcTarget() {
     local module=$1
@@ -221,7 +221,7 @@ function notifyIrcTarget() {
     local irc_nick=${IRC_TARGET_NICK["${irc_target}"]}
     local irc_join=${IRC_TARGET_JOIN["${irc_target}"]}
     local full_log=${BUILD_URL}/${build_source_logdir#${build_source_export}}/${short_log}
-    local full_message="[ ${BUILD_ARCH} ] ${message}: ${full_log}"
+    local full_message="[ ${build_source_arch} ] ${message}: ${full_log}"
 
     local args="-s ${irc_server} -p ${irc_port} -c ${irc_channel} -n ${irc_nick} -t ${message_type}"
     if [ "${irc_join}" != "yes" ]; then
