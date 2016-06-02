@@ -223,17 +223,14 @@ function notifyIrcTarget() {
     local full_log=${BUILD_URL}/${build_source_logdir#${build_source_export}}/${short_log}
     local full_message="[ ${BUILD_ARCH} - ${BUILD_LABEL} ] ${message}: ${full_log}"
 
-    args=()
-    args+=("-s ${irc_server}")
-    args+=("-p ${irc_port}")
-    args+=("-c ${irc_channel}")
-    args+=("-c ${irc_nick}")
+    local args="-s ${irc_server} -p ${irc_port} -c ${irc_channel} -n ${irc_nick} -t ${message_type}"
     if [ "${irc_join}" != "yes" ]; then
-	args+=("--nojoin")
+	args=${args}" --nojoin"
     fi
 
-    # Just launch it in the background, it can take a while and we
-    # can't really recover if it fails anyway.
+    # We block annoyingly because we can launch many of them at the same time otherwise,
+    # also we redirect to /dev/null just incase one day there is sensitive irc login information
+    # that would otherwise end up in the master build.log
     #
-    ${topdir}/extra/irc-notify.py "${args[@]}" "${message}" > /dev/null 2>&1 &
+    ${topdir}/extra/irc-notify.py ${args[@]} "${full_message}" > /dev/null 2>&1
 }
