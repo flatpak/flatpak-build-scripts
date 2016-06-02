@@ -156,14 +156,19 @@ function buildInstallFlatpakSdk() {
     fi
     error_code=$?
 
-    if [ "${error_code}" -ne "0" ]; then
-	notifyIrcTarget ${module} "fail" "build-${module}.txt" \
-			"Failed to build SDK ${module}"
-	dienow
-    else
-	notifyIrcTarget ${module} "success" "build-${module}.txt" \
-			"Build of SDK ${module} passed"
+    if [ -d "${moduledir}/sdk" ]; then
+	if [ "${error_code}" -ne "0" ]; then
+	    notifyIrcTarget ${module} "fail" "build-${module}.txt" \
+			    "Failed to build SDK ${module}"
+	else
+	    notifyIrcTarget ${module} "success" "build-${module}.txt" \
+			    "Build of SDK ${module} passed"
+	fi
+
+	rm -rf "${moduledir}/sdk"
     fi
+
+    [ "${error_code}" -ne "0" ] && dienow
 
     # Ensure there is a remote and install
     flatpakEnsureRemote
@@ -208,18 +213,20 @@ function buildInstallFlatpakApps() {
 	    flatpak-builder "${args[@]}" --subject="Nightly build of ${app_id}, `date`" \
                             ${app_dir} $file
 	fi
-
 	error_code=$?
-	if [ "${error_code}" -ne "0" ]; then
-	    notifyIrcTarget ${module} "fail" "build-${app_id}.txt" \
-			    "Failed to build app ${app_id}"
-	    echo "Failed to build ${app_id}"
-	else
-	    notifyIrcTarget ${module} "success" "build-${app_id}.txt" \
-			    "Build of app ${module} passed"
-	    echo "Successfully built ${app_id}"
-	fi
 
-	rm -rf ${app_dir}
+	if [ -d "${app_dir}" ]; then
+	    if [ "${error_code}" -ne "0" ]; then
+		notifyIrcTarget ${module} "fail" "build-${app_id}.txt" \
+				"Failed to build app ${app_id}"
+		echo "Failed to build ${app_id}"
+	    else
+		notifyIrcTarget ${module} "success" "build-${app_id}.txt" \
+				"Build of app ${module} passed"
+		echo "Successfully built ${app_id}"
+	    fi
+
+	    rm -rf ${app_dir}
+	fi
     done
 }
