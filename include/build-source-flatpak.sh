@@ -93,6 +93,7 @@ function buildInstallFlatpakBase() {
     local module=$1
     local assets=(${BASE_SDK_ASSETS["${module}"]})
     local version=${BASE_SDK_VERSION["${module}"]}
+    local branch=${build_source_branches["${module}"]}
     local moduledir="${build_source_workdir}/${module}"
     local error_code
     args=()
@@ -117,10 +118,10 @@ function buildInstallFlatpakBase() {
     # Make an announcement
     if [ "${error_code}" -ne "0" ]; then
 	notifyIrcTarget ${module} "fail" "build-${module}.txt" \
-			"Failed to build base runtime ${module}"
+			"Runtime ${module} (${branch}) failed"
     else
 	notifyIrcTarget ${module} "success" "build-${module}.txt" \
-			"Build of base runtime ${module} passed"
+			"Runtime ${module} (${branch}) success"
     fi
 
     # A runtime build failure is fatal, we can't build anything else without it
@@ -140,6 +141,7 @@ function buildInstallFlatpakSdk() {
     local module=$1
     local assets=(${SDK_ASSETS["${module}"]})
     local version=${SDK_VERSION["${module}"]}
+    local branch=${build_source_branches["${module}"]}
     local moduledir="${build_source_workdir}/${module}"
     local error_code
     args=()
@@ -164,10 +166,10 @@ function buildInstallFlatpakSdk() {
     if [ -d "${moduledir}/sdk" ]; then
 	if [ "${error_code}" -ne "0" ]; then
 	    notifyIrcTarget ${module} "fail" "build-${module}.txt" \
-			    "Failed to build SDK ${module}"
+			    "SDK ${module} (${branch}) failed"
 	else
 	    notifyIrcTarget ${module} "success" "build-${module}.txt" \
-			    "Build of SDK ${module} passed"
+			    "SDK ${module} (${branch}) success"
 	fi
 
 	rm -rf "${moduledir}/sdk"
@@ -191,6 +193,7 @@ function buildInstallFlatpakSdk() {
 #############################################
 function buildInstallFlatpakApps() {
     local module=$1
+    local branch=${build_source_branches["${module}"]}
     local moduledir="${build_source_workdir}/${module}"
     local app_id=
     local app_dir="${moduledir}/app"
@@ -228,14 +231,11 @@ function buildInstallFlatpakApps() {
 	if [ -d "${app_dir}" ]; then
 	    if [ "${error_code}" -ne "0" ]; then
 		notifyIrcTarget ${module} "fail" "build-${app_id}.txt" \
-				"Failed to build app ${app_id}"
-		echo "Failed to build ${app_id}"
+				"App ${module} (${branch}) '${app_id}' failed"
 	    else
 		notifyIrcTarget ${module} "success" "build-${app_id}.txt" \
-				"Build of app ${module} passed"
-		echo "Successfully built ${app_id}"
+				"App ${module} (${branch}) '${app_id}' success"
 	    fi
-
 	    rm -rf ${app_dir}
 	fi
 

@@ -210,8 +210,12 @@ function notifyIrcTarget() {
     local message=$4
     local irc_target=${build_source_irc_targets["${module}"]}
 
+    # Unconditionally send the message to stdout so it gets into the logs
+    echo "${message}"
+
     # Just early return if this module is not configured for IRC notifications
     if [ -z "${irc_target}" ]; then
+	echo "No IRC target configured for ${module}, not sending notification"
 	return
     fi
 
