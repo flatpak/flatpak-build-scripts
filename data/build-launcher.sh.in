@@ -38,7 +38,7 @@ fi
 # We use a low priority for the build process to ensure that
 # apache's serving of logs and build results has priority over the builds.
 startime=$(date +%s)
-nice -n10 ionice -c2  @@TOPDIR@@/build-payload.sh --workdir @@WORKDIR@@ --config @@CONFIG@@ --logdir ${logdir} ${gpg_arg} >> $logfile 2>&1
+flock @@WORKDIR@@/build_lock nice -n10 ionice -c2  @@TOPDIR@@/build-payload.sh --workdir @@WORKDIR@@ --config @@CONFIG@@ --logdir ${logdir} ${gpg_arg} >> $logfile 2>&1
 error_code=$?
 endtime=$(date +%s)
 
