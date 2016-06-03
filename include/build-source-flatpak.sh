@@ -21,6 +21,8 @@ flatpak_remote="builds"
 flatpak_repo="${build_source_workdir}/export/repo"
 flatpak_remote_args="--user --no-gpg-verify"
 flatpak_install_args="--user --arch=${build_source_arch}"
+flatpak_subdir=".flatpak-builder"
+flatpak_build_subdir="${flatpak_subdir}/build"
 
 #
 # Ensures a remote exists and points to
@@ -112,14 +114,17 @@ function buildInstallFlatpakBase() {
     fi
     error_code=$?
 
+    # Make an announcement
     if [ "${error_code}" -ne "0" ]; then
 	notifyIrcTarget ${module} "fail" "build-${module}.txt" \
 			"Failed to build base runtime ${module}"
-	dienow
     else
 	notifyIrcTarget ${module} "success" "build-${module}.txt" \
 			"Build of base runtime ${module} passed"
     fi
+
+    # A runtime build failure is fatal, we can't build anything else without it
+    [ "${error_code}" -ne "0" ] && dienow
 
     # Ensure there is a remote and install
     flatpakEnsureRemote
@@ -139,7 +144,6 @@ function buildInstallFlatpakSdk() {
     local error_code
     args=()
 
-    # Build the sdk or error out
     flatpakAnnounceBuild "${module}"
     cd "${moduledir}" || dienow
 
@@ -156,6 +160,7 @@ function buildInstallFlatpakSdk() {
     fi
     error_code=$?
 
+    # Make an announcement if something was built
     if [ -d "${moduledir}/sdk" ]; then
 	if [ "${error_code}" -ne "0" ]; then
 	    notifyIrcTarget ${module} "fail" "build-${module}.txt" \
@@ -168,6 +173,10 @@ function buildInstallFlatpakSdk() {
 	rm -rf "${moduledir}/sdk"
     fi
 
+    # Failed builds will accumulate quickly in the build directory, zap em
+    [ -d "${moduledir}/${flatpak_build_subdir}" ] && rm -rf "${moduledir}/${flatpak_build_subdir}"
+
+    # An SDK build failure is fatal, we can't build the apps without knowing we have the SDK
     [ "${error_code}" -ne "0" ] && dienow
 
     # Ensure there is a remote and install
@@ -215,6 +224,7 @@ function buildInstallFlatpakApps() {
 	fi
 	error_code=$?
 
+	# Make an announcement if something was built
 	if [ -d "${app_dir}" ]; then
 	    if [ "${error_code}" -ne "0" ]; then
 		notifyIrcTarget ${module} "fail" "build-${app_id}.txt" \
@@ -228,5 +238,8 @@ function buildInstallFlatpakApps() {
 
 	    rm -rf ${app_dir}
 	fi
+
+	# Failed builds will accumulate quickly in the build directory, zap em
+	[ -d "${moduledir}/${flatpak_build_subdir}" ] && rm -rf "${moduledir}/${flatpak_build_subdir}"
     done
 }
