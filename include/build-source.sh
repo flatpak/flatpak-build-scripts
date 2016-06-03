@@ -73,6 +73,32 @@ function buildSourceAdd() {
     build_source_irc_targets["${module}"]="${irc_target}"
 }
 
+# Reports whether the tip git commit ID has changed
+# after a checkout or update, stores the latest commit ID
+# in a file
+function buildSourceTrackChanges() {
+    local module=$1
+    local branch=${build_source_branches["${module}"]}
+    local moduledir="${build_source_workdir}/${module}"
+    local changed=0
+
+    cd "${moduledir}" || dienow
+
+    if [ ! -f "${build_source_workdir}/${module}.latest" ]; then
+	git rev-parse "${branch}" > "${build_source_workdir}/${module}.latest"
+	changed=1
+    else
+	git rev-parse "${branch}" > "${build_source_workdir}/${module}.new"
+	if ! diff "${build_source_workdir}/${module}.new" "${build_source_workdir}/${module}.latest" > /dev/null; then
+	    cat "${build_source_workdir}/${module}.new" > "${build_source_workdir}/${module}.latest"
+	    changed=1
+	fi
+	rm -f "${build_source_workdir}/${module}.new"
+    fi
+
+    return ${changed}
+}
+
 function buildSourceCheckout() {
     local module=$1
     local branch=${build_source_branches["${module}"]}
@@ -149,8 +175,12 @@ function buildSourceUpdate() {
     git submodule update
 }
 
+# Reports exit status 0 if nothing has changed and 1 if the module
+# was freshly checked out or changed.
+#
 function buildSourceDownload() {
     local module=$1
+    local changed=0
 
     build_source_current=${module}
 
@@ -160,18 +190,26 @@ function buildSourceDownload() {
 	buildSourceCheckout ${module}
     fi
 
+    # Check if the checkout was changed
+    buildSourceTrackChanges ${module}
+    changed=$?
+
     build_source_current=
+
+    return $changed
 }
 
 #
 # Build a source by name, calling it's build_func
 #  $1 module name to build
+#  $2 whether the git checkout has changed (0 if unchanged)
 #
 function buildSourceBuild() {
     local module=$1
+    local changed=$2
 
     build_source_current=${module}
-    ${build_source_funcs["${module}"]} "${module}"
+    ${build_source_funcs["${module}"]} "${module}" "${changed}"
     build_source_current=
 }
 
@@ -183,11 +221,11 @@ function buildSourceRun() {
 
     if [ ! -z "${build_source_target}" ]; then
 	buildSourceDownload "${build_source_target}"
-	buildSourceBuild "${build_source_target}"
+	buildSourceBuild "${build_source_target}" "$?"
     else
 	for module in "${build_source_modules[@]}"; do
 	    buildSourceDownload "${module}"
-	    buildSourceBuild "${module}"
+	    buildSourceBuild "${module}" "$?"
 	done
     fi
 }

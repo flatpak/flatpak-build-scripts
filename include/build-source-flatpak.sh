@@ -91,6 +91,7 @@ function flatpakAnnounceBuild() {
 #############################################
 function buildInstallFlatpakBase() {
     local module=$1
+    local changed=$2
     local assets=(${BASE_SDK_ASSETS["${module}"]})
     local version=${BASE_SDK_VERSION["${module}"]}
     local branch=${build_source_branches["${module}"]}
@@ -98,7 +99,14 @@ function buildInstallFlatpakBase() {
     local error_code
     args=()
 
-    # Build freedesktop-sdk-base or error out
+    # No need to build the base runtime if the gits didnt change
+    # (this is untrue for the SDKs and Apps which may refer to
+    # other external gits which may have changed)
+    if [ "${changed}" -eq "0" ]; then
+	echo "Module ${module} is up to date, not rebuilding"
+	return
+    fi
+
     flatpakAnnounceBuild "${module}"
     cd "${moduledir}" || dienow
 

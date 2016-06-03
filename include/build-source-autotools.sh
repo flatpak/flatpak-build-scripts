@@ -18,7 +18,14 @@
 # package and install it into "${build_source_prefix}
 function buildInstallAutotools() {
     local module=$1
+    local changed=$2
     local moduledir="${build_source_workdir}/${module}"
+
+    # No need to re-autogen and build if the gits didnt change
+    if [ "${changed}" -eq "0" ]; then
+	echo "Module ${module} is up to date, not rebuilding"
+	return
+    fi
 
     export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${build_source_prefix}/lib/pkgconfig" 
 
