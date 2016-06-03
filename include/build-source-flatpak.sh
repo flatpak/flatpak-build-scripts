@@ -100,8 +100,6 @@ function buildInstallFlatpakBase() {
     args=()
 
     # No need to build the base runtime if the gits didnt change
-    # (this is untrue for the SDKs and Apps which may refer to
-    # other external gits which may have changed)
     if [ "${changed}" -eq "0" ]; then
 	echo "Module ${module} is up to date, not rebuilding"
 	return
@@ -147,12 +145,21 @@ function buildInstallFlatpakBase() {
 #############################################
 function buildInstallFlatpakSdk() {
     local module=$1
+    local changed=$2
     local assets=(${SDK_ASSETS["${module}"]})
     local version=${SDK_VERSION["${module}"]}
     local branch=${build_source_branches["${module}"]}
     local moduledir="${build_source_workdir}/${module}"
     local error_code
     args=()
+
+    # Bail out if we asked for a conditional build and nothing changed
+    if ! ${build_source_unconditional}; then
+	if [ "${changed}" -eq "0" ]; then
+	    echo "Module ${module} is up to date, not rebuilding"
+	    return
+	fi
+    fi
 
     flatpakAnnounceBuild "${module}"
     cd "${moduledir}" || dienow
@@ -201,12 +208,21 @@ function buildInstallFlatpakSdk() {
 #############################################
 function buildInstallFlatpakApps() {
     local module=$1
+    local changed=$2
     local branch=${build_source_branches["${module}"]}
     local moduledir="${build_source_workdir}/${module}"
     local app_id=
     local app_dir="${moduledir}/app"
     local error_code
     args=()
+
+    # Bail out if we asked for a conditional build and nothing changed
+    if ! ${build_source_unconditional}; then
+	if [ "${changed}" -eq "0" ]; then
+	    echo "Module ${module} is up to date, not rebuilding"
+	    return
+	fi
+    fi
 
     args+=("--force-clean")
     args+=("--ccache")

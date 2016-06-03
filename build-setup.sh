@@ -23,6 +23,7 @@ arg_tooldir=${topdir}/tools
 arg_workdir=${topdir}/work
 arg_config=${topdir}/build.conf
 arg_schedule=
+arg_interval=
 arg_with_apache=false
 arg_gpg_key=
 
@@ -44,9 +45,22 @@ function usage () {
     echo "  -t --tooldir  <directory>      The directory to perform builds of system tooling in (default: 'tools' subdirectory)"
     echo "  -w --workdir  <directory>      The directory to perform builds in (default: 'work' subdirectory)"
     echo "  -c --config   <filename>       Alternative configuration file (default: build.conf in this directory)"
-    echo "  -s --schedule <expression>     A cron expression indicating when the build should run (default: no cron jobs)"
+    echo "  -s --schedule <expression>     A cron expression indicating when unconditional builds should run (default: no cron jobs)"
+    echo "  -i --interval <minutes>        An interval in minutes indicating how often continuous builds should run (default: none)"
     echo "  --gpg-sign    <KEY-ID>         The gpg signing key ID"
     echo "  --with-apache                  Install and setup an apache server to host the builds and logs"
+    echo
+    echo "About unconditional and continuous builds:"
+    echo
+    echo "  Unconditional builds scheduled with --schedule will attampt to build regardless of whether"
+    echo "  or not their manifests have changed in the git repository. This is suitable for nightly builds"
+    echo "  because manifests may refer to other external git repositories but running them continuously"
+    echo "  can result in the same failure being encountered repeatedly and consequently announced on IRC"
+    echo
+    echo "  Continuous builds scheduled with --interval will only ever attempt to build if the manifest"
+    echo "  has changed in the git repository. This is suitable for continuous building, if a failure can"
+    echo "  be fixed with a change to the manifest then the build machine will rebuild on that change"
+    echo "  as soon as the interval is up and a build is not currently in progress"
     echo
 }
 
@@ -75,6 +89,10 @@ while : ; do
 
 	-s|--schedule)
 	    arg_schedule=${2}
+	    shift 2 ;;
+
+	-i|--interval)
+	    arg_interval=${2}
 	    shift 2 ;;
 
 	--with-apache)
@@ -149,7 +167,7 @@ function installPackages() {
     sudo apt-get install "${ubuntu_packages[@]}"
 }
 
-function ensureBuildSchedule () {
+function ensureBuildScheduleUnconditional () {
     # Create the launch script based on our current configuration
     # and ensure that there is an entry in the user's crontab for
     # the launcher.
@@ -159,12 +177,34 @@ function ensureBuildSchedule () {
         -e "s|@@CONFIG@@|${arg_config}|g" \
         -e "s|@@WORKDIR@@|${arg_workdir}|g" \
         -e "s|@@GPGKEY@@|${arg_gpg_key}|g" \
+	-e "s|@@UNCONDITIONAL@@|--unconditional|g" \
+	-e "s|@@FLOCKNOBLOCK@@||g" \
 	${topdir}/data/build-launcher.sh.in > ${topdir}/build-launcher.sh
 
     chmod +x ${topdir}/build-launcher.sh
 
     job="${arg_schedule} ${topdir}/build-launcher.sh"
     cat <(fgrep -i -v "build-launcher" <(crontab -l)) <(echo "$job") | crontab -
+}
+
+function ensureBuildScheduleContinuous () {
+    # Create the launch script based on our current configuration
+    # and ensure that there is an entry in the user's crontab for
+    # the launcher.
+    #
+    sed -e "s|@@TOPDIR@@|${topdir}|g" \
+        -e "s|@@PREFIX@@|${build_source_prefix}|g" \
+        -e "s|@@CONFIG@@|${arg_config}|g" \
+        -e "s|@@WORKDIR@@|${arg_workdir}|g" \
+        -e "s|@@GPGKEY@@|${arg_gpg_key}|g" \
+	-e "s|@@UNCONDITIONAL@@||g" \
+	-e "s|@@FLOCKNOBLOCK@@|-n|g" \
+	${topdir}/data/build-launcher.sh.in > ${topdir}/build-continuous.sh
+
+    chmod +x ${topdir}/build-continuous.sh
+
+    job="*/${arg_interval} * * * * ${topdir}/build-continuous.sh"
+    cat <(fgrep -i -v "build-continuous" <(crontab -l)) <(echo "$job") | crontab -
 }
 
 function configureApache () {
@@ -199,9 +239,12 @@ installPackages
 
 buildSourceRun
 
-# Scheduling the job is optional
+# Scheduling the jobs is optional
 if [ ! -z "${arg_schedule}" ]; then
-    ensureBuildSchedule
+    ensureBuildScheduleUnconditional
+fi
+if [ ! -z "${arg_interval}" ]; then
+    ensureBuildScheduleContinuous
 fi
 
 if $arg_with_apache; then

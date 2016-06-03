@@ -30,6 +30,7 @@ arg_logdir=
 arg_target=
 arg_force=false
 arg_gpg_key=
+arg_unconditional=false
 
 function usage () {
     echo "Usage: "
@@ -46,6 +47,7 @@ function usage () {
     echo "  -l --logdir   <directory>      Directory to log output of individual builds (default: stdout/stderr)"
     echo "  -t --target   <modulename>     Specify which module to process, otherwise processes all modules"
     echo "  -f --force                     Use brute force, sometimes wiping directories clean when required"
+    echo "  --unconditional                Build regardless of whether git repositories have changed"
     echo "  --gpg-sign    <KEY-ID>         The gpg signing key ID"
     echo
     echo "NOTE: Only host compatible architectures may be specified with --arch. Currently the supported"
@@ -89,6 +91,10 @@ while : ; do
 	    arg_force=true
 	    shift ;;
 
+	--unconditional)
+	    arg_unconditional=true
+	    shift ;;
+
 	*)
 	    break ;;
     esac
@@ -118,6 +124,7 @@ mkdir -p "${arg_workdir}/export" || dienow "Failed to create export directory: $
 build_source_force=${arg_force}
 build_source_config=${arg_config}
 build_source_export="${arg_workdir}/export"
+build_source_unconditional=${arg_unconditional}
 
 # Now pull in the build configuration
 . ${topdir}/include/build-source-config.sh
