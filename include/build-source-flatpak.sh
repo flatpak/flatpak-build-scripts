@@ -77,15 +77,6 @@ function flatpakInstallAsset() {
     fi
 }
 
-function flatpakAnnounceBuild() {
-    local module=$1
-
-    echo "Commencing build of ${module}"
-    if [ ! -z "${build_source_logdir}" ]; then
-	echo "Logging build in build-${module}.txt"
-    fi
-}
-
 #############################################
 #          freedesktop-sdk-base             #
 #############################################
@@ -105,7 +96,7 @@ function buildInstallFlatpakBase() {
 	return
     fi
 
-    flatpakAnnounceBuild "${module}"
+    notifyIrcTarget ${module} "regular" "build-${module}.txt" "Starting runtime build"
     cd "${moduledir}" || dienow
 
     args+=("ARCH=${build_source_arch}")
@@ -123,11 +114,9 @@ function buildInstallFlatpakBase() {
 
     # Make an announcement
     if [ "${error_code}" -ne "0" ]; then
-	notifyIrcTarget ${module} "fail" "build-${module}.txt" \
-			"Runtime ${module} (${branch}) failed"
+	notifyIrcTarget ${module} "fail" "build-${module}.txt" "Runtime build failed"
     else
-	notifyIrcTarget ${module} "success" "build-${module}.txt" \
-			"Runtime ${module} (${branch}) success"
+	notifyIrcTarget ${module} "success" "build-${module}.txt" "Runtime build success"
     fi
 
     # A runtime build failure is fatal, we can't build anything else without it
@@ -161,7 +150,7 @@ function buildInstallFlatpakSdk() {
 	fi
     fi
 
-    flatpakAnnounceBuild "${module}"
+    notifyIrcTarget ${module} "regular" "build-${module}.txt" "Starting SDK build"
     cd "${moduledir}" || dienow
 
     args+=("ARCH=${build_source_arch}")
@@ -180,14 +169,14 @@ function buildInstallFlatpakSdk() {
     # Make an announcement if something was built
     if [ -d "${moduledir}/sdk" ]; then
 	if [ "${error_code}" -ne "0" ]; then
-	    notifyIrcTarget ${module} "fail" "build-${module}.txt" \
-			    "SDK ${module} (${branch}) failed"
+	    notifyIrcTarget ${module} "fail" "build-${module}.txt" "SDK build failed"
 	else
-	    notifyIrcTarget ${module} "success" "build-${module}.txt" \
-			    "SDK ${module} (${branch}) success"
+	    notifyIrcTarget ${module} "success" "build-${module}.txt" "SDK build success"
 	fi
 
 	rm -rf "${moduledir}/sdk"
+    else
+	notifyIrcTarget ${module} "regular" "build-${module}.txt" "SDK already up to date"
     fi
 
     # Failed builds will accumulate quickly in the build directory, zap em
@@ -239,7 +228,7 @@ function buildInstallFlatpakApps() {
     for file in *.json; do
 	app_id=$(basename $file .json)
 
-	flatpakAnnounceBuild "${app_id}"
+	notifyIrcTarget ${module} "regular" "build-${app_id}.txt" "Starting build of '${app_id}'"
 
 	rm -rf ${app_dir}
 	if [ ! -z "${build_source_logdir}" ]; then
@@ -251,16 +240,16 @@ function buildInstallFlatpakApps() {
 	fi
 	error_code=$?
 
-	# Make an announcement if something was built
+	# Make an announcement
 	if [ -d "${app_dir}" ]; then
 	    if [ "${error_code}" -ne "0" ]; then
-		notifyIrcTarget ${module} "fail" "build-${app_id}.txt" \
-				"App ${module} (${branch}) '${app_id}' failed"
+		notifyIrcTarget ${module} "fail" "build-${app_id}.txt" "App '${app_id}' build failed"
 	    else
-		notifyIrcTarget ${module} "success" "build-${app_id}.txt" \
-				"App ${module} (${branch}) '${app_id}' success"
+		notifyIrcTarget ${module} "success" "build-${app_id}.txt"  "App '${app_id}' build success"
 	    fi
 	    rm -rf ${app_dir}
+	else
+	    notifyIrcTarget ${module} "regular" "build-${app_id}.txt" "App '${app_id}' already up to date"
 	fi
 
 	# Failed builds will accumulate quickly in the build directory, zap em

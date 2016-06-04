@@ -160,7 +160,7 @@ for src in "${BASE_SDK_LIST[@]}"; do
 		   ${BASE_SDK_REPO["${src}"]} \
 		   ${BASE_SDK_BRANCH["${src}"]} \
 		   buildInstallFlatpakBase \
-		   ${BASE_SDK_IRC_TARGET["${src}"]}
+		   "${BASE_SDK_IRC_TARGETS[${src}]}"
 done
 
 #
@@ -171,7 +171,7 @@ for src in "${SDK_LIST[@]}"; do
 		   ${SDK_REPO["${src}"]} \
 		   ${SDK_BRANCH["${src}"]} \
 		   buildInstallFlatpakSdk \
-		   ${SDK_IRC_TARGET["${src}"]}
+		   "${SDK_IRC_TARGETS[${src}]}"
 done
 
 #
@@ -182,7 +182,7 @@ for src in "${APP_LIST[@]}"; do
 		   ${APP_REPO["${src}"]} \
 		   ${APP_BRANCH["${src}"]} \
 		   buildInstallFlatpakApps \
-		   ${APP_IRC_TARGET["${src}"]}
+		   "${APP_IRC_TARGETS[${src}]}"
 done
 
 #

@@ -51,26 +51,49 @@ function dienow() {
     exit 1
 }
 
+# Checks whether the given word is found
+# in the given word list
+#
+#  $1 - The word to check for
+#  $2 - The word list
+#
+# Returns 0 (true in bash) if the word was
+# found, otherwise 1 (false) if the word was
+# not found.
+function wordInList() {
+    local word=$1
+    local list=($2)
+
+    for iter in ${list[@]}; do
+
+	if [ "${iter}" == "${word}" ]; then
+	    return 0
+	fi
+    done
+
+    return 1;
+}
+
 #
 # Add a source to the array
 #  $1 module name to add
 #  $2 git repository url
 #  $3 the branch name of the git module
 #  $4 function to build with, like buildInstallAutotools()
-#  $5 IRC target id
+#  $5 IRC target id wordlist
 #
 function buildSourceAdd() {
     local module=$1
     local repo=$2
     local branch=$3
     local build_func=$4
-    local irc_target=$5
+    local irc_targets=$5
 
     build_source_modules+=("${module}")
     build_source_repos["${module}"]="$repo"
     build_source_branches["${module}"]="$branch"
     build_source_funcs["${module}"]=${build_func}
-    build_source_irc_targets["${module}"]="${irc_target}"
+    build_source_irc_targets["${module}"]="${irc_targets}"
 }
 
 # Reports whether the tip git commit ID has changed
@@ -239,40 +262,50 @@ function buildSourceRun() {
 #
 # The announcement will be made with the following format:
 #
-#   [ ${build_source_arch} ] <message>: Log file location
+#   [ ${module} (${branch}) - ${build_source_arch} ] <message>: Log file location
 #
 function notifyIrcTarget() {
     local module=$1
     local message_type=$2
     local short_log=$3
     local message=$4
-    local irc_target=${build_source_irc_targets["${module}"]}
+    local branch=${build_source_branches["${module}"]}
+    local irc_targets=(${build_source_irc_targets[${module}]})
 
     # Unconditionally send the message to stdout so it gets into the logs
-    echo "${message}"
+    echo "[ ${module} (${branch}) - ${build_source_arch} ] ${message}: ${short_log}"
 
     # Just early return if this module is not configured for IRC notifications
-    if [ -z "${irc_target}" ]; then
+    if [ -z "${irc_targets[@]}" ]; then
 	echo "No IRC target configured for ${module}, not sending notification"
 	return
     fi
 
-    local irc_server=${IRC_TARGET_SERVER["${irc_target}"]}
-    local irc_port=${IRC_TARGET_PORT["${irc_target}"]}
-    local irc_channel=${IRC_TARGET_CHANNEL["${irc_target}"]}
-    local irc_nick=${IRC_TARGET_NICK["${irc_target}"]}
-    local irc_join=${IRC_TARGET_JOIN["${irc_target}"]}
     local full_log=${BUILD_URL}/${build_source_logdir#${build_source_export}}/${short_log}
-    local full_message="[ ${build_source_arch} ] ${message}: ${full_log}"
+    local full_message="[ ${module} (${branch}) - ${build_source_arch} ] ${message}: ${full_log}"
 
-    local args="-s ${irc_server} -p ${irc_port} -c ${irc_channel} -n ${irc_nick} -t ${message_type}"
-    if [ "${irc_join}" != "yes" ]; then
-	args=${args}" --nojoin"
-    fi
+    for irc_target in ${irc_targets[@]}; do
+	local irc_server=${IRC_TARGET_SERVER["${irc_target}"]}
+	local irc_port=${IRC_TARGET_PORT["${irc_target}"]}
+	local irc_channel=${IRC_TARGET_CHANNEL["${irc_target}"]}
+	local irc_nick=${IRC_TARGET_NICK["${irc_target}"]}
+	local irc_join=${IRC_TARGET_JOIN["${irc_target}"]}
+	local irc_filter=${IRC_TARGET_FILTER["${irc_target}"]}
 
-    # We block annoyingly because we can launch many of them at the same time otherwise,
-    # also we redirect to /dev/null just incase one day there is sensitive irc login information
-    # that would otherwise end up in the master build.log
-    #
-    ${topdir}/extra/irc-notify.py ${args[@]} "${full_message}" > /dev/null 2>&1
+	# Filter out undesired message types for this IRC target
+	if ! wordInList "${message_type}" "${irc_filter}"; then
+	    continue
+	fi
+
+	local args="-s ${irc_server} -p ${irc_port} -c ${irc_channel} -n ${irc_nick} -t ${message_type}"
+	if [ "${irc_join}" != "yes" ]; then
+	    args=${args}" --nojoin"
+	fi
+
+	# We block annoyingly because we can launch many of them at the same time otherwise,
+	# also we redirect to /dev/null just incase one day there is sensitive irc login information
+	# that would otherwise end up in the master build.log
+	#
+	${topdir}/extra/irc-notify.py ${args} "${full_message}" > /dev/null 2>&1
+    done
 }

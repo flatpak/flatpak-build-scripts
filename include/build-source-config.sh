@@ -19,13 +19,13 @@
 # Declare arrays used in the config file
 #
 
-# List of IRC targets and associative arrays
-IRC_TARGET_LIST=()
+# IRC target associative arrays
 declare -A IRC_TARGET_SERVER
 declare -A IRC_TARGET_PORT
 declare -A IRC_TARGET_CHANNEL
 declare -A IRC_TARGET_NICK
 declare -A IRC_TARGET_JOIN
+declare -A IRC_TARGET_FILTER
 
 # Various build type lists and their
 # corresponding associative arrays
