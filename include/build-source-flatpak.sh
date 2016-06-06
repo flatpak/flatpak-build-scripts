@@ -195,6 +195,33 @@ function buildInstallFlatpakSdk() {
 #############################################
 #            App json collections           #
 #############################################
+
+# Reports whether a json file has changed in an App
+# repository full of build manifests, this keeps a copy
+# of the last run.
+#
+# Reports exit status 0 (bash true) if the app manifest is unchanged
+# and 1 (bash false) if the module was freshly checked out or if the
+# app manifest is new or changed.
+function checkAppUnchanged() {
+    local module=$1
+    local app_id=$2
+    local moduledir="${build_source_workdir}/${module}"
+    local cachedir="${build_source_workdir}/${module}-cache"
+    local changed=0
+
+    if [ ! -d "${cachedir}" ] || [ ! -f "${cachedir}/${app_id}.json" ]; then
+	mkdir -p "${cachedir}"
+	changed=1
+    elif ! diff "${moduledir}/${app_id}.json" "${cachedir}/${app_id}.json" > /dev/null; then
+	changed=1
+    fi
+
+    cp -f "${moduledir}/${app_id}.json" "${cachedir}/${app_id}.json"
+
+    return ${changed}
+}
+
 function buildInstallFlatpakApps() {
     local module=$1
     local changed=$2
@@ -227,6 +254,16 @@ function buildInstallFlatpakApps() {
     cd "${moduledir}" || dienow
     for file in *.json; do
 	app_id=$(basename $file .json)
+
+	# Check (and track) whether this app's manifest has changed
+	if checkAppUnchanged "${module}" "${app_id}"; then
+
+	    # Skip the module if we asked for a conditional build
+	    # and this app's manifest is unchanged.
+	    if ! ${build_source_unconditional}; then
+		continue
+	    fi
+	fi
 
 	notifyIrcTarget ${module} "regular" "build-${app_id}.txt" "Starting build of '${app_id}'"
 
