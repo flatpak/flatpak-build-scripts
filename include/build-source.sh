@@ -374,7 +374,7 @@ function notifyIrcTarget() {
     echo "[ ${module} (${branch}) - ${build_source_arch} ] ${message}: ${short_log}"
 
     # Just early return if this module is not configured for IRC notifications
-    if [ -z "${irc_targets[@]}" ]; then
+    if ! (( ${#irc_targets[@]} )); then
 	echo "No IRC target configured for ${module}, not sending notification"
 	return
     fi
