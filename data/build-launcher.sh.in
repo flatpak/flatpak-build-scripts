@@ -24,7 +24,10 @@ if ! flock @@FLOCKNOBLOCK@@ 201  ; then
 fi
 
 # Make sure flatpack and ostree are available in the cron job's PATH
+# also ensure the LD_LIBRARY_PATH is setup in case we built our tooling
+# into a non-standard prefix
 export PATH=@@PREFIX@@/bin:$PATH
+export LD_LIBRARY_PATH=@@PREFIX@@/lib:$LD_LIBRARY_PATH
 
 logdir=@@WORKDIR@@/export/logs/build-$(date +%Y-%m-%d-%H%M%S)
 logfile=${logdir}/build.txt
@@ -50,7 +53,8 @@ unconditional_arg=@@UNCONDITIONAL@@
 startime=$(date +%s)
 nice -n10 ionice -c2  @@TOPDIR@@/build-payload.sh \
      --workdir @@WORKDIR@@ --config @@CONFIG@@ \
-     --logdir ${logdir} ${gpg_arg} ${unconditional_arg} >> $logfile 2>&1
+     --headroom @@HEADROOMGB@@ --logdir ${logdir} \
+     ${gpg_arg} ${unconditional_arg} >> $logfile 2>&1
 error_code=$?
 endtime=$(date +%s)
 

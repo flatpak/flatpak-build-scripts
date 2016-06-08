@@ -74,6 +74,80 @@ function wordInList() {
     return 1;
 }
 
+# Checks if the amount of headroom required is
+# available on the filesystem where we perform builds
+#
+#  $1 - Amount of desired GB of free space before a build
+#
+# Returns 0 (bash true) if the required space is available,
+# otherwise returns 1 (bash false)
+#
+function headroomAvailable() {
+    local headroom_gb=$1
+    local available_bytes=0
+    local available_gb=0
+
+    # Get the amount of free blocks * block size (bytes) available
+    # to a regular user on the filesystem where builds occur.
+    available_bytes=$(($(stat -f --format="%a*%S" ${build_source_workdir})))
+
+    # Devide down to gigabytes
+    available_gb=$((${available_bytes} / 1024 / 1024 / 1024))
+
+    if [ $available_gb -lt $headroom_gb ]; then
+	return 1
+    fi
+
+    return 0
+}
+
+function cullOstreeRepo() {
+    local ostree_repo="${build_source_workdir}/export/repo"
+
+    if [ -d "${flatpak_repo}" ]; then
+	# Removes all but the latest commits of every existing branch
+	# in the exported ostree repository (I.e. only keep the latest
+	# build of everything)
+	ostree prune --repo=${flatpak_repo} --depth=0 --refs-only
+    fi
+}
+
+function purgeLogs() {
+    local logdir="${build_source_workdir}/export/logs"
+
+    rm -rf "${logdir}"
+}
+
+# Attempt to free space and ensure there
+# is enough space to perform the build.
+#
+#  $1 - Amount of desired GB of free space before a build
+#
+function ensureHeadroomGigabytes() {
+    local headroom_gb=$1
+
+    if ! headroomAvailable ${headroom_gb}; then
+
+	# First cull the ostree repository
+	echo "Culling ostree repo for more space"
+	cullOstreeRepo
+
+	if ! headroomAvailable ${headroom_gb}; then
+
+	    # If culling the ostree repo was not enough, go ahead
+	    # and purge the logs as well
+	    echo "Purging logs for more space"
+	    purgeLogs
+
+	    if ! headroomAvailable ${headroom_gb}; then
+		# Build server in need of maintenance, todo: Notify some global IRC target
+		#
+		dienow "Build server in need of maintenance, less than ${headroom_gb} GB of free space available before building"
+	    fi
+	fi
+    fi
+}
+
 #
 # Add a source to the array
 #  $1 module name to add
@@ -239,8 +313,17 @@ function buildSourceBuild() {
 #
 # Run the build
 #
+#  $1 - Amount of required disk space for the build, in gigabytes (optional)
+#
+# If the required disk space is not provided, no cleanup will be attempted
+#
 function buildSourceRun() {
+    local headroom_gb=$1
     local module
+
+    if [ ! -z "${headroom_gb}" ]; then
+	ensureHeadroomGigabytes ${headroom_gb}
+    fi
 
     if [ ! -z "${build_source_target}" ]; then
 	buildSourceDownload "${build_source_target}"

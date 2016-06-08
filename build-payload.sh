@@ -28,6 +28,7 @@ arg_arch=
 arg_workdir=${topdir}/work
 arg_logdir=
 arg_target=
+arg_headroom_gb=10
 arg_force=false
 arg_gpg_key=
 arg_unconditional=false
@@ -46,6 +47,7 @@ function usage () {
     echo "  -w --workdir  <directory>      The directory to perform builds in (default: 'work' subdirectory)"
     echo "  -l --logdir   <directory>      Directory to log output of individual builds (default: stdout/stderr)"
     echo "  -t --target   <modulename>     Specify which module to process, otherwise processes all modules"
+    echo "  -g --headroom <GB>             Gigabytes of headroom required before a build, not counting initial build (default: 10)"
     echo "  -f --force                     Use brute force, sometimes wiping directories clean when required"
     echo "  --unconditional                Build regardless of whether git repositories have changed"
     echo "  --gpg-sign    <KEY-ID>         The gpg signing key ID"
@@ -53,7 +55,9 @@ function usage () {
     echo "NOTE: Only host compatible architectures may be specified with --arch. Currently the supported"
     echo "      architectures include: i386, x86_64, aarch64 and arm. Use the --arch option to build a"
     echo "      32-bit arm runtime on an aarch64 host, or to build a 32bit i386 runtime on an x86_64 host."
-    echo "  "
+    echo
+    echo "See build-setup.sh --help for an explanation about --headroom."
+    echo
 }
 
 while : ; do
@@ -62,6 +66,10 @@ while : ; do
 	    usage;
 	    exit 0;
 	    shift ;;
+
+	-c|--config)
+	    arg_config=${2}
+	    shift 2 ;;
 
 	-a|--arch)
 	    arg_arch=${2}
@@ -79,8 +87,8 @@ while : ; do
 	    arg_target=${2}
 	    shift 2 ;;
 
-	-c|--config)
-	    arg_config=${2}
+	-g|--headroom)
+	    arg_headroom_gb=${2}
 	    shift 2 ;;
 
 	--gpg-sign)
@@ -211,4 +219,4 @@ fi
 #
 # Run the build
 #
-buildSourceRun
+buildSourceRun "${arg_headroom_gb}"

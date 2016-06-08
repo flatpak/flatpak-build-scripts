@@ -24,6 +24,7 @@ arg_workdir=${topdir}/work
 arg_config=${topdir}/build.conf
 arg_schedule=
 arg_interval=
+arg_headroom_gb=10
 arg_with_apache=false
 arg_gpg_key=
 
@@ -47,6 +48,7 @@ function usage () {
     echo "  -c --config   <filename>       Alternative configuration file (default: build.conf in this directory)"
     echo "  -s --schedule <expression>     A cron expression indicating when unconditional builds should run (default: no cron jobs)"
     echo "  -i --interval <minutes>        An interval in minutes indicating how often continuous builds should run (default: none)"
+    echo "  -g --headroom <GB>             Gigabytes of headroom required before a build, not counting initial build (default: 10)"
     echo "  --gpg-sign    <KEY-ID>         The gpg signing key ID"
     echo "  --with-apache                  Install and setup an apache server to host the builds and logs"
     echo
@@ -61,6 +63,19 @@ function usage () {
     echo "  has changed in the git repository. This is suitable for continuous building, if a failure can"
     echo "  be fixed with a change to the manifest then the build machine will rebuild on that change"
     echo "  as soon as the interval is up and a build is not currently in progress"
+    echo
+    echo "About headroom"
+    echo "  The --headroom parameter specifies the amount of gigabytes which should be free on disk"
+    echo "  before commencing a build. Note that this is not the amount of free space required for"
+    echo "  an initial build from scratch, as the base runtime checkout after a build will take"
+    echo "  around 30gb which will remain occupied for eternally and remain approximately constant."
+    echo
+    echo "  Instead, the headroom should signify the amount of free space desired before commencing"
+    echo "  any consecutive build, once the entire build has completed at least once."
+    echo
+    echo "  When launching a build, if less than the desired headroom is available, we will first"
+    echo "  prune the ostree repository, leaving only the most recent commit of every branch in place."
+    echo "  If this is insufficient, we will purge the build logs."
     echo
 }
 
@@ -93,6 +108,10 @@ while : ; do
 
 	-i|--interval)
 	    arg_interval=${2}
+	    shift 2 ;;
+
+	-g|--headroom)
+	    arg_headroom_gb=${2}
 	    shift 2 ;;
 
 	--with-apache)
@@ -167,7 +186,16 @@ function installPackages() {
     sudo apt-get install "${ubuntu_packages[@]}"
 }
 
-function ensureBuildScheduleUnconditional () {
+# Ensure the build schedule for either unconditional
+# or continuous builds.
+#
+#  $1 - "continuous" or "unconditional"
+#
+function ensureBuildSchedule () {
+    local schedule_type=$1
+    local job=
+    local script_name=
+
     # Create the launch script based on our current configuration
     # and ensure that there is an entry in the user's crontab for
     # the launcher.
@@ -176,35 +204,31 @@ function ensureBuildScheduleUnconditional () {
         -e "s|@@PREFIX@@|${build_source_prefix}|g" \
         -e "s|@@CONFIG@@|${arg_config}|g" \
         -e "s|@@WORKDIR@@|${arg_workdir}|g" \
+	-e "s|@@HEADROOMGB@@|${arg_headroom_gb}|g" \
         -e "s|@@GPGKEY@@|${arg_gpg_key}|g" \
-	-e "s|@@UNCONDITIONAL@@|--unconditional|g" \
-	-e "s|@@FLOCKNOBLOCK@@||g" \
-	${topdir}/data/build-launcher.sh.in > ${topdir}/build-launcher.sh
+	${topdir}/data/build-launcher.sh.in > ${topdir}/launcher.tmp.sh
 
-    chmod +x ${topdir}/build-launcher.sh
+    if [ "${schedule_type}" == "continuous" ]; then
+	script_name="build-continuous.sh"
+	job="*/${arg_interval} * * * * ${topdir}/${script_name}"
 
-    job="${arg_schedule} ${topdir}/build-launcher.sh"
-    cat <(fgrep -i -v "build-launcher" <(crontab -l)) <(echo "$job") | crontab -
-}
+	sed -e "s|@@UNCONDITIONAL@@||g" \
+	    -e "s|@@FLOCKNOBLOCK@@|-n|g" \
+	    ${topdir}/launcher.tmp.sh > ${topdir}/${script_name}
+    else
+	script_name="build-launcher.sh"
+	job="${arg_schedule} ${topdir}/${script_name}"
 
-function ensureBuildScheduleContinuous () {
-    # Create the launch script based on our current configuration
-    # and ensure that there is an entry in the user's crontab for
-    # the launcher.
-    #
-    sed -e "s|@@TOPDIR@@|${topdir}|g" \
-        -e "s|@@PREFIX@@|${build_source_prefix}|g" \
-        -e "s|@@CONFIG@@|${arg_config}|g" \
-        -e "s|@@WORKDIR@@|${arg_workdir}|g" \
-        -e "s|@@GPGKEY@@|${arg_gpg_key}|g" \
-	-e "s|@@UNCONDITIONAL@@||g" \
-	-e "s|@@FLOCKNOBLOCK@@|-n|g" \
-	${topdir}/data/build-launcher.sh.in > ${topdir}/build-continuous.sh
+	sed -e "s|@@UNCONDITIONAL@@|--unconditional|g" \
+	    -e "s|@@FLOCKNOBLOCK@@||g" \
+	    ${topdir}/launcher.tmp.sh > ${topdir}/${script_name}
+    fi
 
-    chmod +x ${topdir}/build-continuous.sh
+    rm -f ${topdir}/launcher.tmp.sh
+    chmod +x ${topdir}/${script_name}
 
-    job="*/${arg_interval} * * * * ${topdir}/build-continuous.sh"
-    cat <(fgrep -i -v "build-continuous" <(crontab -l)) <(echo "$job") | crontab -
+    # Register the job with user's crontab
+    cat <(fgrep -i -v "${script_name}" <(crontab -l)) <(echo "$job") | crontab -
 }
 
 function configureApache () {
@@ -241,10 +265,10 @@ buildSourceRun
 
 # Scheduling the jobs is optional
 if [ ! -z "${arg_schedule}" ]; then
-    ensureBuildScheduleUnconditional
+    ensureBuildSchedule "unconditional"
 fi
 if [ ! -z "${arg_interval}" ]; then
-    ensureBuildScheduleContinuous
+    ensureBuildSchedule "continuous"
 fi
 
 if $arg_with_apache; then
