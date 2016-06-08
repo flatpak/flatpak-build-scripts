@@ -142,6 +142,9 @@ build_source_unconditional=${arg_unconditional}
 if [ ! -z "${arg_arch}" ]; then
     # From command line
     build_source_arch=${arg_arch}
+
+    # If launched from command line with arch specified, zap the arches
+    BUILD_ARCHES=()
 elif [ ! -z "${BUILD_ARCH}" ]; then
     # From config file
     build_source_arch=${BUILD_ARCH}

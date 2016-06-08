@@ -320,20 +320,35 @@ function buildSourceBuild() {
 function buildSourceRun() {
     local headroom_gb=$1
     local module
+    local arch
 
     if [ ! -z "${headroom_gb}" ]; then
 	ensureHeadroomGigabytes ${headroom_gb}
     fi
 
-    if [ ! -z "${build_source_target}" ]; then
-	buildSourceDownload "${build_source_target}"
-	buildSourceBuild "${build_source_target}" "$?"
-    else
-	for module in "${build_source_modules[@]}"; do
-	    buildSourceDownload "${module}"
-	    buildSourceBuild "${module}" "$?"
-	done
+    # If an array of build arches is unspecified, then
+    # default it to ${build_source_arch}.
+    if ! (( ${#BUILD_ARCHES[@]} )); then
+	BUILD_ARCHES=(${build_source_arch})
     fi
+
+    # Loop over the arches and set build_source_arch
+    # for each iteration
+    for arch in ${BUILD_ARCHES[@]}; do
+
+	# Reset the arch for each iteration
+	build_source_arch=${arch}
+
+	if [ ! -z "${build_source_target}" ]; then
+	    buildSourceDownload "${build_source_target}"
+	    buildSourceBuild "${build_source_target}" "$?"
+	else
+	    for module in "${build_source_modules[@]}"; do
+		buildSourceDownload "${module}"
+		buildSourceBuild "${module}" "$?"
+	    done
+	fi
+    done
 }
 
 #
