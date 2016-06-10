@@ -167,6 +167,8 @@ function refreshTools() {
 }
 
 function refreshSysdeps() {
+    local os_id=$(source /etc/os-release; echo $ID)
+
     #
     # Packages required on Ubuntu 16.04
     #
@@ -176,15 +178,31 @@ function refreshSysdeps() {
 		     libgpg-error-dev libgpgme11-dev libfuse-dev libarchive-dev
 		     libgirepository1.0-dev libxau-dev libjson-glib-dev libpolkit-gobject-1-dev
 		     libseccomp-dev elfutils libelf-dev libdwarf-dev libsoup2.4-dev)
+    #
+    # Packages required on RHEL
+    #
+    rhel_packages=(libarchive-devel, gpgme-devel, fuse-devel bison polkit-devel libseccomp-devel
+		   elfutils-devel wget  git bzr libsoup-devel json-glib-devel glibc-devel gcc
+		   autoconf libtool gobject-introspection-devel libXau-devel intltool gtk-doc
+		   libattr-devel e2fsprogs-devel libseccomp-devel)
 
     # IRC support
     ubuntu_packages+=(python-twisted)
+    rhel_packages+=(python-twisted-core)
 
     # Apache support
     ubuntu_packages+=(apache2)
+    rhel_packages+=(httpd)
 
     echo "Ensuring we have the packages we need..."
-    sudo apt-get install "${ubuntu_packages[@]}"
+    if [ "x$os_id" = "xubuntu" ] ; then
+	sudo apt-get install "${ubuntu_packages[@]}"
+    elif [ "x$os_id" = "xrhel" ] ; then
+	sudo yum install "${rhel_packages[@]}"
+    else
+	echo "Unsupported distribution"
+	exit 1
+    fi
 }
 
 # Ensure the build schedule for either unconditional
