@@ -26,7 +26,6 @@ arg_schedule=
 arg_interval=
 arg_headroom_gb=10
 arg_with_apache=false
-arg_gpg_key=
 
 function usage () {
     echo "Usage: "
@@ -49,7 +48,6 @@ function usage () {
     echo "  -s --schedule <expression>     A cron expression indicating when unconditional builds should run (default: no cron jobs)"
     echo "  -i --interval <minutes>        An interval in minutes indicating how often continuous builds should run (default: none)"
     echo "  -g --headroom <GB>             Gigabytes of headroom required before a build, not counting initial build (default: 10)"
-    echo "  --gpg-sign    <KEY-ID>         The gpg signing key ID"
     echo "  --with-apache                  Install and setup an apache server to host the builds and logs"
     echo
     echo "About unconditional and continuous builds:"
@@ -117,10 +115,6 @@ while : ; do
 	--with-apache)
 	    arg_with_apache=true
 	    shift ;;
-
-	--gpg-sign)
-	    arg_gpg_key=${2}
-	    shift 2 ;;
 
 	*)
 	    break ;;
@@ -205,7 +199,6 @@ function ensureBuildSchedule () {
         -e "s|@@CONFIG@@|${arg_config}|g" \
         -e "s|@@WORKDIR@@|${arg_workdir}|g" \
 	-e "s|@@HEADROOMGB@@|${arg_headroom_gb}|g" \
-        -e "s|@@GPGKEY@@|${arg_gpg_key}|g" \
 	${topdir}/data/build-launcher.sh.in > ${topdir}/launcher.tmp.sh
 
     if [ "${schedule_type}" == "continuous" ]; then

@@ -77,6 +77,16 @@ function flatpakInstallAsset() {
     fi
 }
 
+function composeGpgArgs() {
+    if [ ! -z "${BUILD_GPG_KEY}" ]; then
+	if [ ! -z "${BUILD_GPG_HOMEDIR}" ]; then
+	    echo "--gpg-sign=${BUILD_GPG_KEY} --gpg-dir=${BUILD_GPG_HOMEDIR}"
+	else
+	    echo "--gpg-sign=${BUILD_GPG_KEY}"
+	fi
+    fi
+}
+
 #############################################
 #          freedesktop-sdk-base             #
 #############################################
@@ -87,6 +97,7 @@ function buildInstallFlatpakBase() {
     local version=${BASE_SDK_VERSION["${module}"]}
     local branch=${build_source_branches["${module}"]}
     local moduledir="${build_source_workdir}/${module}"
+    local gpg_arg=$(composeGpgArgs)
     local error_code
     args=()
 
@@ -101,8 +112,8 @@ function buildInstallFlatpakBase() {
 
     args+=("ARCH=${build_source_arch}")
     args+=("REPO=${flatpak_repo}")
-    if [ ! -z "${flatpak_gpg_key}" ]; then
-	args+=("GPG_ARGS=--gpg-sign=${flatpak_gpg_key}")
+    if [ ! -z "${gpg_arg}" ]; then
+	args+=("GPG_ARGS=\"${gpg_arg}\"")
     fi
 
     if [ ! -z "${build_source_logdir}" ]; then
@@ -139,6 +150,7 @@ function buildInstallFlatpakSdk() {
     local version=${SDK_VERSION["${module}"]}
     local branch=${build_source_branches["${module}"]}
     local moduledir="${build_source_workdir}/${module}"
+    local gpg_arg=$(composeGpgArgs)
     local error_code
     args=()
 
@@ -155,8 +167,8 @@ function buildInstallFlatpakSdk() {
 
     args+=("ARCH=${build_source_arch}")
     args+=("REPO=${flatpak_repo}")
-    if [ ! -z "${flatpak_gpg_key}" ]; then
-	args+=("EXPORT_ARGS=--gpg-sign=${flatpak_gpg_key}")
+    if [ ! -z "${gpg_arg}" ]; then
+	args+=("EXPORT_ARGS=\"${gpg_arg}\"")
     fi
 
     if [ ! -z "${build_source_logdir}" ]; then
@@ -229,6 +241,7 @@ function buildInstallFlatpakApps() {
     local moduledir="${build_source_workdir}/${module}"
     local app_id=
     local app_dir="${moduledir}/app"
+    local gpg_arg=$(composeGpgArgs)
     local error_code
     args=()
 
@@ -245,8 +258,8 @@ function buildInstallFlatpakApps() {
     args+=("--require-changes")
     args+=("--repo=${flatpak_repo}")
     args+=("--arch=${build_source_arch}")
-    if [ ! -z "${flatpak_gpg_key}" ]; then
-	args+=("--gpg-sign=${flatpak_gpg_key}")
+    if [ ! -z "${gpg_arg}" ]; then
+	args+=("${gpg_arg}")
     fi
 
     # failing a build here is non-fatal, we want to try to

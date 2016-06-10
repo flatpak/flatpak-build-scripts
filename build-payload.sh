@@ -30,7 +30,6 @@ arg_logdir=
 arg_target=
 arg_headroom_gb=10
 arg_force=false
-arg_gpg_key=
 arg_unconditional=false
 
 function usage () {
@@ -50,7 +49,6 @@ function usage () {
     echo "  -g --headroom <GB>             Gigabytes of headroom required before a build, not counting initial build (default: 10)"
     echo "  -f --force                     Use brute force, sometimes wiping directories clean when required"
     echo "  --unconditional                Build regardless of whether git repositories have changed"
-    echo "  --gpg-sign    <KEY-ID>         The gpg signing key ID"
     echo
     echo "NOTE: Only host compatible architectures may be specified with --arch. Currently the supported"
     echo "      architectures include: i386, x86_64, aarch64 and arm. Use the --arch option to build a"
@@ -91,10 +89,6 @@ while : ; do
 	    arg_headroom_gb=${2}
 	    shift 2 ;;
 
-	--gpg-sign)
-	    arg_gpg_key=${2}
-	    shift 2 ;;
-
 	-f|--force)
 	    arg_force=true
 	    shift ;;
@@ -112,7 +106,6 @@ done
 #
 mkdir -p "${arg_workdir}" || dienow "Failed to create work directory: ${arg_workdir}"
 build_source_workdir="$(cd ${arg_workdir} && pwd)"
-flatpak_gpg_key="${arg_gpg_key}"
 
 if [ ! -z "${arg_logdir}" ]; then
     mkdir -p "${arg_logdir}" || dienow "Failed to create log directory: ${arg_logdir}"

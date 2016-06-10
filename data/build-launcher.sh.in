@@ -38,12 +38,6 @@ echo "====================================================" >> $logfile
 echo "Starting build at `date`" >> $logfile
 echo "====================================================" >> $logfile
 
-gpg_key_id=@@GPGKEY@@
-gpg_arg=
-if [ ! -z "${gpg_key_id}" ]; then
-    gpg_arg="--gpg-sign ${gpg_key_id}"
-fi
-
 unconditional_arg=@@UNCONDITIONAL@@
 
 # Just manually time it in seconds
@@ -54,7 +48,7 @@ startime=$(date +%s)
 nice -n10 ionice -c2  @@TOPDIR@@/build-payload.sh \
      --workdir @@WORKDIR@@ --config @@CONFIG@@ \
      --headroom @@HEADROOMGB@@ --logdir ${logdir} \
-     ${gpg_arg} ${unconditional_arg} >> $logfile 2>&1
+     ${unconditional_arg} >> $logfile 2>&1
 error_code=$?
 endtime=$(date +%s)
 
