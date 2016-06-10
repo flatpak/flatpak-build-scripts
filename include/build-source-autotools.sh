@@ -35,6 +35,5 @@ function buildInstallAutotools() {
     echo "Building ${module}"
     make -j8 || dienow
     echo "Installing ${module}"
-    sudo make install || dienow
-    sudo ldconfig || dienow
+    make install || dienow
 }
