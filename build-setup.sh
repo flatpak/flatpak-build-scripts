@@ -184,7 +184,7 @@ function refreshSysdeps() {
     rhel_packages=(libarchive-devel, gpgme-devel, fuse-devel bison polkit-devel libseccomp-devel
 		   elfutils-devel wget  git bzr libsoup-devel json-glib-devel glibc-devel gcc
 		   autoconf libtool gobject-introspection-devel libXau-devel intltool gtk-doc
-		   libattr-devel e2fsprogs-devel libseccomp-devel)
+		   libattr-devel e2fsprogs-devel libseccomp-devel gcc-c++ diffstat texinfo chrpath)
 
     # IRC support
     ubuntu_packages+=(python-twisted)
