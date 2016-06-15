@@ -113,7 +113,7 @@ function buildInstallFlatpakBase() {
     args+=("ARCH=${build_source_arch}")
     args+=("REPO=${flatpak_repo}")
     if [ ! -z "${gpg_arg}" ]; then
-	args+=("GPG_ARGS=\"${gpg_arg}\"")
+	args+=("GPG_ARGS=${gpg_arg}")
     fi
 
     if [ ! -z "${build_source_logdir}" ]; then
@@ -168,7 +168,7 @@ function buildInstallFlatpakSdk() {
     args+=("ARCH=${build_source_arch}")
     args+=("REPO=${flatpak_repo}")
     if [ ! -z "${gpg_arg}" ]; then
-	args+=("EXPORT_ARGS=\"${gpg_arg}\"")
+	args+=("EXPORT_ARGS=${gpg_arg}")
     fi
 
     if [ ! -z "${build_source_logdir}" ]; then
