@@ -80,7 +80,7 @@ function flatpakInstallAsset() {
 function composeGpgArgs() {
     if [ ! -z "${BUILD_GPG_KEY}" ]; then
 	if [ ! -z "${BUILD_GPG_HOMEDIR}" ]; then
-	    echo "--gpg-sign=${BUILD_GPG_KEY} --gpg-dir=${BUILD_GPG_HOMEDIR}"
+	    echo "--gpg-sign=${BUILD_GPG_KEY} --gpg-homedir=${BUILD_GPG_HOMEDIR}"
 	else
 	    echo "--gpg-sign=${BUILD_GPG_KEY}"
 	fi
