@@ -80,7 +80,7 @@ function flatpakInstallAsset() {
 function composeGpgArgs() {
     if [ ! -z "${BUILD_GPG_KEY}" ]; then
 	if [ ! -z "${BUILD_GPG_HOMEDIR}" ]; then
-	    echo "--gpg-sign=${BUILD_GPG_KEY} --gpg-dir=${BUILD_GPG_HOMEDIR}"
+	    echo "--gpg-sign=${BUILD_GPG_KEY} --gpg-homedir=${BUILD_GPG_HOMEDIR}"
 	else
 	    echo "--gpg-sign=${BUILD_GPG_KEY}"
 	fi
@@ -113,7 +113,7 @@ function buildInstallFlatpakBase() {
     args+=("ARCH=${build_source_arch}")
     args+=("REPO=${flatpak_repo}")
     if [ ! -z "${gpg_arg}" ]; then
-	args+=("GPG_ARGS=\"${gpg_arg}\"")
+	args+=("GPG_ARGS=${gpg_arg}")
     fi
 
     if [ ! -z "${build_source_logdir}" ]; then
@@ -168,7 +168,7 @@ function buildInstallFlatpakSdk() {
     args+=("ARCH=${build_source_arch}")
     args+=("REPO=${flatpak_repo}")
     if [ ! -z "${gpg_arg}" ]; then
-	args+=("EXPORT_ARGS=\"${gpg_arg}\"")
+	args+=("EXPORT_ARGS=${gpg_arg}")
     fi
 
     if [ ! -z "${build_source_logdir}" ]; then
