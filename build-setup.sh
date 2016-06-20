@@ -150,6 +150,7 @@ arg_config="$(realpath $arg_config)"
 # Prepare the build source logic, we're building in tooldir
 # and installing into the prefix
 build_source_workdir=${tooldir}
+build_source_build="${arg_workdir}/build"
 build_source_prefix=${prefix}
 
 # Import the build source mechanics, the flatpak sources and the build config
