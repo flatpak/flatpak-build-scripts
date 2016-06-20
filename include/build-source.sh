@@ -176,21 +176,22 @@ function buildSourceAdd() {
 function buildSourceTrackChanges() {
     local module=$1
     local branch=${build_source_branches["${module}"]}
-    local moduledir="${build_source_workdir}/${module}"
+    local archdir="${build_source_build}/${build_source_arch}"
+    local moduledir="${archdir}/${module}"
     local changed=0
 
     cd "${moduledir}" || dienow
 
-    if [ ! -f "${build_source_workdir}/${module}.latest" ]; then
-	git rev-parse "${branch}" > "${build_source_workdir}/${module}.latest"
+    if [ ! -f "${archdir}/${module}.latest" ]; then
+	git rev-parse "${branch}" > "${archdir}/${module}.latest"
 	changed=1
     else
-	git rev-parse "${branch}" > "${build_source_workdir}/${module}.new"
-	if ! diff "${build_source_workdir}/${module}.new" "${build_source_workdir}/${module}.latest" > /dev/null; then
-	    cat "${build_source_workdir}/${module}.new" > "${build_source_workdir}/${module}.latest"
+	git rev-parse "${branch}" > "${archdir}/${module}.new"
+	if ! diff "${archdir}/${module}.new" "${archdir}/${module}.latest" > /dev/null; then
+	    cat "${archdir}/${module}.new" > "${archdir}/${module}.latest"
 	    changed=1
 	fi
-	rm -f "${build_source_workdir}/${module}.new"
+	rm -f "${archdir}/${module}.new"
     fi
 
     return ${changed}
@@ -200,9 +201,10 @@ function buildSourceCheckout() {
     local module=$1
     local branch=${build_source_branches["${module}"]}
     local repo=${build_source_repos["${module}"]}
+    local archdir="${build_source_build}/${build_source_arch}"
 
     echo "Checking out ${module} from ${repo}"
-    mkdir -p ${build_source_workdir} && cd "${build_source_workdir}" || dienow
+    mkdir -p ${archdir} && cd "${archdir}" || dienow
 
     git clone ${repo} ${module} || dienow
     cd "${module}" || dienow
@@ -217,7 +219,8 @@ function buildSourceUpdate() {
     local module=$1
     local branch=${build_source_branches["${module}"]}
     local repo=${build_source_repos["${module}"]}
-    local moduledir="${build_source_workdir}/${module}"
+    local archdir="${build_source_build}/${build_source_arch}"
+    local moduledir="${archdir}/${module}"
     local error_code
 
     echo "Fetching from ${repo}"
@@ -278,10 +281,11 @@ function buildSourceUpdate() {
 function buildSourceDownload() {
     local module=$1
     local changed=0
+    local archdir="${build_source_build}/${build_source_arch}"
 
     build_source_current=${module}
 
-    if [ -d "${build_source_workdir}/${module}" ]; then
+    if [ -d "${archdir}/${module}" ]; then
 	buildSourceUpdate ${module}
     else
 	buildSourceCheckout ${module}

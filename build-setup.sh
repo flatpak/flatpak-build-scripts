@@ -131,6 +131,7 @@ mkdir -p "${tooldir}" || dienow "Failed to create tools build directory: ${toold
 mkdir -p "${prefix}" || dienow "Failed to create tools install directory: ${prefix}"
 mkdir -p "${arg_workdir}" || dienow "Failed to create work directory: ${arg_workdir}"
 mkdir -p "${arg_workdir}/export"
+mkdir -p "${arg_workdir}/build"
 
 tooldir="$(cd ${tooldir} && pwd)"
 prefix="$(cd ${prefix} && pwd)"

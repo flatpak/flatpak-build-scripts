@@ -119,12 +119,14 @@ if [ ! -f "${arg_config}" ]; then
     exit 1
 fi
 
-# Ensure the export directory just in case
+# Ensure the export and build directory just in case
 mkdir -p "${arg_workdir}/export" || dienow "Failed to create export directory: ${arg_workdir}/export"
+mkdir -p "${arg_workdir}/build" || dienow "Failed to create build directory: ${arg_workdir}/build"
 
 build_source_force=${arg_force}
 build_source_config=${arg_config}
 build_source_export="${arg_workdir}/export"
+build_source_build="${arg_workdir}/build"
 build_source_unconditional=${arg_unconditional}
 
 # Now pull in the build configuration

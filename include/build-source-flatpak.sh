@@ -96,7 +96,8 @@ function buildInstallFlatpakBase() {
     local assets=(${BASE_SDK_ASSETS["${module}"]})
     local version=${BASE_SDK_VERSION["${module}"]}
     local branch=${build_source_branches["${module}"]}
-    local moduledir="${build_source_workdir}/${module}"
+    local archdir="${build_source_build}/${build_source_arch}"
+    local moduledir="${archdir}/${module}"
     local gpg_arg=$(composeGpgArgs)
     local error_code
     args=()
@@ -149,7 +150,8 @@ function buildInstallFlatpakSdk() {
     local assets=(${SDK_ASSETS["${module}"]})
     local version=${SDK_VERSION["${module}"]}
     local branch=${build_source_branches["${module}"]}
-    local moduledir="${build_source_workdir}/${module}"
+    local archdir="${build_source_build}/${build_source_arch}"
+    local moduledir="${archdir}/${module}"
     local gpg_arg=$(composeGpgArgs)
     local error_code
     args=()
@@ -218,8 +220,9 @@ function buildInstallFlatpakSdk() {
 function checkAppUnchanged() {
     local module=$1
     local app_id=$2
-    local moduledir="${build_source_workdir}/${module}"
-    local cachedir="${build_source_workdir}/${module}-cache"
+    local archdir="${build_source_build}/${build_source_arch}"
+    local moduledir="${archdir}/${module}"
+    local cachedir="${archdir}/${module}-cache"
     local changed=0
 
     if [ ! -d "${cachedir}" ] || [ ! -f "${cachedir}/${app_id}.json" ]; then
@@ -238,7 +241,8 @@ function buildInstallFlatpakApps() {
     local module=$1
     local changed=$2
     local branch=${build_source_branches["${module}"]}
-    local moduledir="${build_source_workdir}/${module}"
+    local archdir="${build_source_build}/${build_source_arch}"
+    local moduledir="${archdir}/${module}"
     local app_id=
     local app_dir="${moduledir}/app"
     local gpg_arg=$(composeGpgArgs)
