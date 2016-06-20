@@ -19,7 +19,8 @@
 function buildInstallAutotools() {
     local module=$1
     local changed=$2
-    local moduledir="${build_source_workdir}/${module}"
+    local archdir="${build_source_build}/${build_source_arch}"
+    local moduledir="${archdir}/${module}"
 
     # No need to re-autogen and build if the gits didnt change
     if [ "${changed}" -eq "0" ]; then
