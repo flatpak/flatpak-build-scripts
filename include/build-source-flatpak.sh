@@ -263,7 +263,7 @@ function buildInstallFlatpakApps() {
     args+=("--repo=${flatpak_repo}")
     args+=("--arch=${build_source_arch}")
     if [ ! -z "${gpg_arg}" ]; then
-	args+=("${gpg_arg}")
+	args+=(${gpg_arg})
     fi
 
     # failing a build here is non-fatal, we want to try to
