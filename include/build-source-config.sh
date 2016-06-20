@@ -34,21 +34,21 @@ declare -A BASE_SDK_REPO
 declare -A BASE_SDK_BRANCH
 declare -A BASE_SDK_VERSION
 declare -A BASE_SDK_ASSETS
-declare -A BASE_SDK_IRC_TARGET
+declare -A BASE_SDK_IRC_TARGETS
 
 SDK_LIST=()
 declare -A SDK_REPO
 declare -A SDK_BRANCH
 declare -A SDK_VERSION
 declare -A SDK_ASSETS
-declare -A SDK_IRC_TARGET
+declare -A SDK_IRC_TARGETS
 
 APP_LIST=()
 declare -A APP_REPO
 declare -A APP_BRANCH
 declare -A APP_VERSION
 declare -A APP_ASSETS
-declare -A APP_IRC_TARGET
+declare -A APP_IRC_TARGETS
 
 # Source the actual config which will populate the arrays
 . ${arg_config}
