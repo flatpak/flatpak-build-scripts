@@ -29,6 +29,9 @@ fi
 export PATH=@@PREFIX@@/bin:$PATH
 export LD_LIBRARY_PATH=@@PREFIX@@/lib:$LD_LIBRARY_PATH
 
+# Install the runtimes under the work dir rather than in ~/.local/share/
+export XDG_DATA_HOME=@@WORKDIR@@/share
+
 logdir=@@WORKDIR@@/export/logs/build-$(date +%Y-%m-%d-%H%M%S)
 logfile=${logdir}/build.txt
 
