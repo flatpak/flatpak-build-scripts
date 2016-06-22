@@ -17,8 +17,6 @@
 # A build source to build a few known
 # types of flatpak related repository structures
 
-flatpak_remote="builds"
-flatpak_repo="${build_source_workdir}/export/repo"
 flatpak_remote_args="--user --no-gpg-verify"
 flatpak_install_args="--user"
 flatpak_subdir=".flatpak-builder"
@@ -29,6 +27,10 @@ flatpak_build_subdir="${flatpak_subdir}/build"
 # the common repo
 #
 function flatpakEnsureRemote() {
+    local repo_suffix=$1
+    local flatpak_repo="${build_source_workdir}/export/repo${repo_suffix}"
+    local flatpak_remote="builds${repo_suffix}"
+
     local error_code
     local repo_url="file://${flatpak_repo}"
 
@@ -58,9 +60,11 @@ function flatpakEnsureRemote() {
 function flatpakInstallAsset() {
     local asset=$1
     local branch=$2
+    local repo_suffix=$3
+    local flatpak_remote="builds${repo_suffix}"
     local error_code
 
-    echo "Installing asset ${asset} at branch ${branch}"
+    echo "Installing asset ${asset} at branch ${branch} to repo${repo_suffix}"
 
     # Dont specify the branch when it's master
     if [ "${branch}" == "master" ]; then
@@ -97,6 +101,9 @@ function buildInstallFlatpakBase() {
     local changed=$2
     local assets=(${BASE_SDK_ASSETS["${module}"]})
     local version=${BASE_SDK_VERSION["${module}"]}
+    local repo_suffix=${BASE_SDK_REPO_SUFFIX["${module}"]}
+    local flatpak_repo="${build_source_workdir}/export/repo${repo_suffix}"
+    local flatpak_remote="builds${repo_suffix}"
     local branch=${build_source_branches["${module}"]}
     local archdir="${build_source_build}/${build_source_arch}"
     local moduledir="${archdir}/${module}"
@@ -137,9 +144,9 @@ function buildInstallFlatpakBase() {
     [ "${error_code}" -ne "0" ] && dienow
 
     # Ensure there is a remote and install
-    flatpakEnsureRemote
+    flatpakEnsureRemote ${repo_suffix}
     for asset in ${assets[@]}; do
-	flatpakInstallAsset "${asset}" "${version}"
+	flatpakInstallAsset "${asset}" "${version}" "${repo_suffix}"
     done
 }
 
@@ -151,6 +158,9 @@ function buildInstallFlatpakSdk() {
     local changed=$2
     local assets=(${SDK_ASSETS["${module}"]})
     local version=${SDK_VERSION["${module}"]}
+    local repo_suffix=${SDK_REPO_SUFFIX["${module}"]}
+    local flatpak_repo="${build_source_workdir}/export/repo${repo_suffix}"
+    local flatpak_remote="builds${repo_suffix}"
     local branch=${build_source_branches["${module}"]}
     local archdir="${build_source_build}/${build_source_arch}"
     local moduledir="${archdir}/${module}"
@@ -202,9 +212,9 @@ function buildInstallFlatpakSdk() {
     [ "${error_code}" -ne "0" ] && dienow
 
     # Ensure there is a remote and install
-    flatpakEnsureRemote
+    flatpakEnsureRemote ${repo_suffix}
     for asset in ${assets[@]}; do
-	flatpakInstallAsset "${asset}" "${version}"
+	flatpakInstallAsset "${asset}" "${version}" "${repo_suffix}"
     done
 }
 
@@ -244,6 +254,9 @@ function buildInstallFlatpakApps() {
     local changed=$2
     local branch=${build_source_branches["${module}"]}
     local archdir="${build_source_build}/${build_source_arch}"
+    local repo_suffix=${APP_REPO_SUFFIX["${module}"]}
+    local flatpak_repo="${build_source_workdir}/export/repo${repo_suffix}"
+    local flatpak_remote="builds${repo_suffix}"
     local moduledir="${archdir}/${module}"
     local app_id=
     local app_dir="${moduledir}/app"

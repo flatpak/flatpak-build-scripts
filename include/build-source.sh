@@ -102,14 +102,14 @@ function headroomAvailable() {
 }
 
 function cullOstreeRepo() {
-    local ostree_repo="${build_source_workdir}/export/repo"
-
-    if [ -d "${flatpak_repo}" ]; then
-	# Removes all but the latest commits of every existing branch
-	# in the exported ostree repository (I.e. only keep the latest
-	# build of everything)
-	ostree prune --repo=${flatpak_repo} --depth=0 --refs-only
-    fi
+    for ostree_repo in ${build_source_workdir}/export/repo*; do
+        if [ -d "${ostree_repo}" ]; then
+	    # Removes all but the latest commits of every existing branch
+	    # in the exported ostree repository (I.e. only keep the latest
+	    # build of everything)
+	    ostree prune --repo=${ostree_repo} --depth=0 --refs-only
+        fi
+    done
 }
 
 function purgeLogs() {
