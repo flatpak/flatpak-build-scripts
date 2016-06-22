@@ -20,7 +20,7 @@
 flatpak_remote="builds"
 flatpak_repo="${build_source_workdir}/export/repo"
 flatpak_remote_args="--user --no-gpg-verify"
-flatpak_install_args="--user --arch=${build_source_arch}"
+flatpak_install_args="--user"
 flatpak_subdir=".flatpak-builder"
 flatpak_build_subdir="${flatpak_subdir}/build"
 
@@ -67,12 +67,14 @@ function flatpakInstallAsset() {
 	branch=
     fi
 
+    local arch_arg="--arch=${build_source_arch}"
+
     # If install reports an error it's probably installed, try an upgrade in that case.
-    flatpak install ${flatpak_install_args} ${flatpak_remote} ${asset} ${branch} > /dev/null 2>&1
+    flatpak install ${flatpak_install_args} ${arch_arg} ${flatpak_remote} ${asset} ${branch} > /dev/null 2>&1
     error_code=$?
 
     if [ "${error_code}" -ne "0" ]; then
-	flatpak update ${flatpak_install_args} ${asset} ${branch} || \
+	flatpak update ${flatpak_install_args} ${arch_arg} ${asset} ${branch} || \
 	    dienow "Failed to install or update: ${asset}/${branch} from remote ${flatpak_remote}"
     fi
 }
