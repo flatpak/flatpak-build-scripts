@@ -117,7 +117,7 @@ function buildInstallFlatpakBase() {
 	return
     fi
 
-    notifyIrcTarget ${module} "regular" "build-${module}.txt" "Starting runtime build"
+    notifyIrcTarget ${module} "regular" "build-${module}-${build_source_arch}.txt" "Starting runtime build"
     cd "${moduledir}" || dienow
 
     args+=("ARCH=${build_source_arch}")
@@ -127,7 +127,7 @@ function buildInstallFlatpakBase() {
     fi
 
     if [ ! -z "${build_source_logdir}" ]; then
-	make "${args[@]}" > "${build_source_logdir}/build-${module}.txt" 2>&1
+	make "${args[@]}" > "${build_source_logdir}/build-${module}-${build_source_arch}.txt" 2>&1
     else
 	make "${args[@]}"
     fi
@@ -135,9 +135,9 @@ function buildInstallFlatpakBase() {
 
     # Make an announcement
     if [ "${error_code}" -ne "0" ]; then
-	notifyIrcTarget ${module} "fail" "build-${module}.txt" "Runtime build failed"
+	notifyIrcTarget ${module} "fail" "build-${module}-${build_source_arch}.txt" "Runtime build failed"
     else
-	notifyIrcTarget ${module} "success" "build-${module}.txt" "Runtime build success"
+	notifyIrcTarget ${module} "success" "build-${module}-${build_source_arch}.txt" "Runtime build success"
     fi
 
     # A runtime build failure is fatal, we can't build anything else without it
@@ -176,7 +176,7 @@ function buildInstallFlatpakSdk() {
 	fi
     fi
 
-    notifyIrcTarget ${module} "regular" "build-${module}.txt" "Starting SDK build"
+    notifyIrcTarget ${module} "regular" "build-${module}-${build_source_arch}.txt" "Starting SDK build"
     cd "${moduledir}" || dienow
 
     args+=("ARCH=${build_source_arch}")
@@ -186,7 +186,7 @@ function buildInstallFlatpakSdk() {
     fi
 
     if [ ! -z "${build_source_logdir}" ]; then
-	make "${args[@]}" > "${build_source_logdir}/build-${module}.txt" 2>&1
+	make "${args[@]}" > "${build_source_logdir}/build-${module}-${build_source_arch}.txt" 2>&1
     else
 	make "${args[@]}"
     fi
@@ -195,14 +195,14 @@ function buildInstallFlatpakSdk() {
     # Make an announcement if something was built
     if [ -d "${moduledir}/sdk" ]; then
 	if [ "${error_code}" -ne "0" ]; then
-	    notifyIrcTarget ${module} "fail" "build-${module}.txt" "SDK build failed"
+	    notifyIrcTarget ${module} "fail" "build-${module}-${build_source_arch}.txt" "SDK build failed"
 	else
-	    notifyIrcTarget ${module} "success" "build-${module}.txt" "SDK build success"
+	    notifyIrcTarget ${module} "success" "build-${module}-${build_source_arch}.txt" "SDK build success"
 	fi
 
 	rm -rf "${moduledir}/sdk"
     else
-	notifyIrcTarget ${module} "regular" "build-${module}.txt" "SDK already up to date"
+	notifyIrcTarget ${module} "regular" "build-${module}-${build_source_arch}.txt" "SDK already up to date"
     fi
 
     # Failed builds will accumulate quickly in the build directory, zap em
@@ -297,12 +297,12 @@ function buildInstallFlatpakApps() {
 	    fi
 	fi
 
-	notifyIrcTarget ${module} "regular" "build-${app_id}.txt" "Starting build of '${app_id}'"
+	notifyIrcTarget ${module} "regular" "build-${app_id}-${build_source_arch}.txt" "Starting build of '${app_id}'"
 
 	rm -rf ${app_dir}
 	if [ ! -z "${build_source_logdir}" ]; then
 	    flatpak-builder "${args[@]}" --subject="Nightly build of ${app_id}, `date`" \
-                            ${app_dir} $file > "${build_source_logdir}/build-${app_id}.txt" 2>&1
+                            ${app_dir} $file > "${build_source_logdir}/build-${app_id}-${build_source_arch}.txt" 2>&1
 	else
 	    flatpak-builder "${args[@]}" --subject="Nightly build of ${app_id}, `date`" \
                             ${app_dir} $file
@@ -312,13 +312,13 @@ function buildInstallFlatpakApps() {
 	# Make an announcement
 	if [ -d "${app_dir}" ]; then
 	    if [ "${error_code}" -ne "0" ]; then
-		notifyIrcTarget ${module} "fail" "build-${app_id}.txt" "App '${app_id}' build failed"
+		notifyIrcTarget ${module} "fail" "build-${app_id}-${build_source_arch}.txt" "App '${app_id}' build failed"
 	    else
-		notifyIrcTarget ${module} "success" "build-${app_id}.txt"  "App '${app_id}' build success"
+		notifyIrcTarget ${module} "success" "build-${app_id}-${build_source_arch}.txt"  "App '${app_id}' build success"
 	    fi
 	    rm -rf ${app_dir}
 	else
-	    notifyIrcTarget ${module} "regular" "build-${app_id}.txt" "App '${app_id}' already up to date"
+	    notifyIrcTarget ${module} "regular" "build-${app_id}-${build_source_arch}.txt" "App '${app_id}' already up to date"
 	fi
 
 	# Failed builds will accumulate quickly in the build directory, zap em
