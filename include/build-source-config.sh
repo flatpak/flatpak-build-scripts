@@ -31,6 +31,7 @@ declare -A IRC_TARGET_FILTER
 # corresponding associative arrays
 BASE_SDK_LIST=()
 declare -A BASE_SDK_REPO
+declare -A BASE_SDK_REPO_SUFFIX
 declare -A BASE_SDK_BRANCH
 declare -A BASE_SDK_VERSION
 declare -A BASE_SDK_ASSETS
@@ -38,6 +39,7 @@ declare -A BASE_SDK_IRC_TARGETS
 
 SDK_LIST=()
 declare -A SDK_REPO
+declare -A SDK_REPO_SUFFIX
 declare -A SDK_BRANCH
 declare -A SDK_VERSION
 declare -A SDK_ASSETS
@@ -45,6 +47,7 @@ declare -A SDK_IRC_TARGETS
 
 APP_LIST=()
 declare -A APP_REPO
+declare -A APP_REPO_SUFFIX
 declare -A APP_BRANCH
 declare -A APP_VERSION
 declare -A APP_ASSETS
