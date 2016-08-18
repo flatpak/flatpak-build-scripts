@@ -61,6 +61,15 @@ duration=$((seconds/86400))" days "$(date -d "1970-01-01 + $seconds seconds" "+%
 echo "====================================================" >> $logfile
 if [ "${error_code}" -eq "0" ]; then
     echo "Build completed successfully in: $duration" >> $logfile
+    if [ $(ls -Aq1 ${logdir} | wc -l) -le 1 ]; then
+        # The directory has only the build.txt file, and there were no errors, lets
+        # remove the entire directory, because its not interesting. We do it manually
+        # instead of recursively in case something raced and created a logfile.
+        # We still log this operation in case someone is tailing the file.
+        echo "No builds were issued, removing log dir" >> $logfile
+        rm ${logfile}
+        rm -d ${logdir}
+    fi
 else
     echo "Build failed in: $duration" >> $logfile
 fi
