@@ -293,6 +293,7 @@ function buildInstallFlatpakApps() {
 	    # Skip the module if we asked for a conditional build
 	    # and this app's manifest is unchanged.
 	    if ! ${build_source_unconditional}; then
+	        echo "App ${app_id} is up to date, not rebuilding"
 		continue
 	    fi
 	fi
