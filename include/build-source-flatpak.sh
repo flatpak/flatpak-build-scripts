@@ -303,7 +303,7 @@ function buildInstallFlatpakApps() {
 	rm -rf ${app_dir}
 	if [ ! -z "${build_source_logdir}" ]; then
 	    flatpak-builder "${args[@]}" --subject="Nightly build of ${app_id}, `date`" \
-                            ${app_dir} $file > "${build_source_logdir}/build-${app_id}-${build_source_arch}.txt" 2>&1
+                            ${app_dir} $file > "${build_source_logdir}/build-${module}-${app_id}-${build_source_arch}.txt" 2>&1
 	else
 	    flatpak-builder "${args[@]}" --subject="Nightly build of ${app_id}, `date`" \
                             ${app_dir} $file
