@@ -298,7 +298,7 @@ function buildInstallFlatpakApps() {
 	    fi
 	fi
 
-	notifyIrcTarget ${module} "regular" "build-${app_id}-${build_source_arch}.txt" "Starting build of '${app_id}'"
+	notifyIrcTarget ${module} "regular" "build-${module}-${app_id}-${build_source_arch}.txt" "Starting build of '${app_id}'"
 
 	rm -rf ${app_dir}
 	if [ ! -z "${build_source_logdir}" ]; then
@@ -313,13 +313,13 @@ function buildInstallFlatpakApps() {
 	# Make an announcement
 	if [ -d "${app_dir}" ]; then
 	    if [ "${error_code}" -ne "0" ]; then
-		notifyIrcTarget ${module} "fail" "build-${app_id}-${build_source_arch}.txt" "App '${app_id}' build failed"
+		notifyIrcTarget ${module} "fail" "build-${module}-${app_id}-${build_source_arch}.txt" "App '${app_id}' build failed"
 	    else
-		notifyIrcTarget ${module} "success" "build-${app_id}-${build_source_arch}.txt"  "App '${app_id}' build success"
+		notifyIrcTarget ${module} "success" "build-${module}-${app_id}-${build_source_arch}.txt"  "App '${app_id}' build success"
 	    fi
 	    rm -rf ${app_dir}
 	else
-	    notifyIrcTarget ${module} "regular" "build-${app_id}-${build_source_arch}.txt" "App '${app_id}' already up to date"
+	    notifyIrcTarget ${module} "regular" "build-${module}-${app_id}-${build_source_arch}.txt" "App '${app_id}' already up to date"
 	fi
 
 	# Failed builds will accumulate quickly in the build directory, zap em
