@@ -61,6 +61,7 @@ duration=$((seconds/86400))" days "$(date -d "1970-01-01 + $seconds seconds" "+%
 echo "====================================================" >> $logfile
 if [ "${error_code}" -eq "0" ]; then
     echo "Build completed successfully in: $duration" >> $logfile
+    echo "====================================================" >> $logfile
     if [ $(ls -Aq1 ${logdir} | wc -l) -le 1 ]; then
         # The directory has only the build.txt file, and there were no errors, lets
         # remove the entire directory, because its not interesting. We do it manually
@@ -72,8 +73,8 @@ if [ "${error_code}" -eq "0" ]; then
     fi
 else
     echo "Build failed in: $duration" >> $logfile
+    echo "====================================================" >> $logfile
 fi
-echo "====================================================" >> $logfile
 
 
 # End exclusive lock
