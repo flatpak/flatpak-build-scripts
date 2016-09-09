@@ -79,4 +79,3 @@ fi
 
 # End exclusive lock
 exec 201>&-
-rm -rf @@WORKDIR@@/build_lock
