@@ -43,6 +43,7 @@ declare -A SDK_REPO_SUFFIX
 declare -A SDK_BRANCH
 declare -A SDK_VERSION
 declare -A SDK_ASSETS
+declare -A SDK_EXTRA_TARGETS
 declare -A SDK_IRC_TARGETS
 
 APP_LIST=()

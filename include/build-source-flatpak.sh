@@ -158,6 +158,7 @@ function buildInstallFlatpakSdk() {
     local changed=$2
     local assets=(${SDK_ASSETS["${module}"]})
     local version=${SDK_VERSION["${module}"]}
+    local extra_targets=${SDK_EXTRA_TARGETS["${module}"]}
     local repo_suffix=${SDK_REPO_SUFFIX["${module}"]}
     local flatpak_repo="${build_source_workdir}/export/repo${repo_suffix}"
     local flatpak_remote="builds${repo_suffix}"
@@ -192,6 +193,24 @@ function buildInstallFlatpakSdk() {
     fi
     error_code=$?
 
+    if [ "${error_code}" -eq "0" ]; then
+        # Ensure there is a remote and install
+        flatpakEnsureRemote ${repo_suffix}
+        for asset in ${assets[@]}; do
+            flatpakInstallAsset "${asset}" "${version}" "${repo_suffix}"
+        done
+
+        for extra_target in ${extra_targets[@]}; do
+            if [ ! -z "${build_source_logdir}" ]; then
+                make "${args[@]}" "${extra_target}" >> "${build_source_logdir}/build-${module}-${build_source_arch}.txt" 2>&1
+            else
+                make "${args[@]}" "${extra_target}"
+            fi
+            error_code=$?
+            if [ "${error_code}" -ne "0" ]; then break; fi
+        done
+    fi
+
     # Make an announcement if something was built
     if [ -d "${moduledir}/sdk" ]; then
 	if [ "${error_code}" -ne "0" ]; then
@@ -210,12 +229,6 @@ function buildInstallFlatpakSdk() {
 
     # An SDK build failure is fatal, we can't build the apps without knowing we have the SDK
     [ "${error_code}" -ne "0" ] && dienow
-
-    # Ensure there is a remote and install
-    flatpakEnsureRemote ${repo_suffix}
-    for asset in ${assets[@]}; do
-	flatpakInstallAsset "${asset}" "${version}" "${repo_suffix}"
-    done
 }
 
 #############################################
