@@ -161,7 +161,6 @@ function refreshTools() {
     #
     # Refresh the build tooling itself with the autotools stuff
     #
-    buildSourceAdd "libgsystem" "git://git.gnome.org/libgsystem"         "master" buildInstallAutotools
     buildSourceAdd "ostree"     "https://github.com/ostreedev/ostree"    "master" buildInstallAutotools
     buildSourceAdd "flatpak"    "https://github.com/flatpak/flatpak.git" "master" buildInstallAutotools
 
