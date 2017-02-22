@@ -32,7 +32,7 @@ function buildInstallAutotools() {
 
     cd "${moduledir}" || dienow
     echo "Configuring ${module}"
-    ./autogen.sh --prefix="${build_source_prefix}" || dienow
+    ./autogen.sh --prefix="${build_source_prefix}" --with-systemdsystemunitdir="${build_source_prefix}" || dienow
     echo "Building ${module}"
     make -j8 || dienow
     echo "Installing ${module}"
