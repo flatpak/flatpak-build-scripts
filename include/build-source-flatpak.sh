@@ -235,33 +235,6 @@ function buildInstallFlatpakSdk() {
 #            App json collections           #
 #############################################
 
-# Reports whether a json file has changed in an App
-# repository full of build manifests, this keeps a copy
-# of the last run.
-#
-# Reports exit status 0 (bash true) if the app manifest is unchanged
-# and 1 (bash false) if the module was freshly checked out or if the
-# app manifest is new or changed.
-function checkAppUnchanged() {
-    local module=$1
-    local app_id=$2
-    local archdir="${build_source_build}/${build_source_arch}"
-    local moduledir="${archdir}/${module}"
-    local cachedir="${archdir}/${module}-cache"
-    local changed=0
-
-    if [ ! -d "${cachedir}" ] || [ ! -f "${cachedir}/${app_id}.json" ]; then
-	mkdir -p "${cachedir}"
-	changed=1
-    elif ! diff "${moduledir}/${app_id}.json" "${cachedir}/${app_id}.json" > /dev/null; then
-	changed=1
-    fi
-
-    cp -f "${moduledir}/${app_id}.json" "${cachedir}/${app_id}.json"
-
-    return ${changed}
-}
-
 function buildInstallFlatpakApps() {
     local module=$1
     local changed=$2
@@ -279,49 +252,38 @@ function buildInstallFlatpakApps() {
 
     # Bail out if we asked for a conditional build and nothing changed
     if ! ${build_source_unconditional}; then
-	if [ "${changed}" -eq "0" ]; then
-	    echo "Module ${module} is up to date, not rebuilding"
-	    return
-	fi
+        args+=("--skip-if-unchanged")
     fi
 
-    args+=("--force-clean")
-    args+=("--ccache")
-    args+=("--require-changes")
     args+=("--repo=${flatpak_repo}")
     args+=("--arch=${build_source_arch}")
     if [ ! -z "${gpg_arg}" ]; then
 	args+=(${gpg_arg})
     fi
+    if [ ! -z ${APP_REPO_SUFFIX["${module}"]} ]; then
+	args+=(${APP_REPO_SUFFIX["${module}"]})
+    fi
 
     # failing a build here is non-fatal, we want to try to
     # build all the apps even if some fail.
     cd "${moduledir}" || dienow
-    for file in *.json; do
-	app_id=$(basename $file .json)
-
-	# Check (and track) whether this app's manifest has changed
-	if checkAppUnchanged "${module}" "${app_id}"; then
-
-	    # Skip the module if we asked for a conditional build
-	    # and this app's manifest is unchanged.
-	    if ! ${build_source_unconditional}; then
-	        echo "App ${app_id} is up to date, not rebuilding"
-		continue
-	    fi
-	fi
+    for file in *.app; do
+	app_id=$(basename $file .app)
 
 	notifyIrcTarget ${module} "regular" "build-${module}-${app_id}-${build_source_arch}.txt" "Starting build of '${app_id}'"
 
 	rm -rf ${app_dir}
 	if [ ! -z "${build_source_logdir}" ]; then
-	    flatpak-builder "${args[@]}" --subject="Nightly build of ${app_id}, `date`" \
-                            ${app_dir} $file > "${build_source_logdir}/build-${module}-${app_id}-${build_source_arch}.txt" 2>&1
+	    ./build.sh $file "${args[@]}" > "${build_source_logdir}/build-${module}-${app_id}-${build_source_arch}.txt" 2>&1
 	else
-	    flatpak-builder "${args[@]}" --subject="Nightly build of ${app_id}, `date`" \
-                            ${app_dir} $file
+	    ./build.sh $file "${args[@]}"
 	fi
 	error_code=$?
+
+        # Error code 42 means we skipped the build due to unchanged file
+	if [ "${error_code}" -eq "42" ]; then
+            rm "${build_source_logdir}/build-${module}-${app_id}-${build_source_arch}.txt"
+        fi
 
 	# Make an announcement
 	if [ -d "${app_dir}" ]; then

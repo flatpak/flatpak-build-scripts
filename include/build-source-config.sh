@@ -53,6 +53,7 @@ declare -A APP_BRANCH
 declare -A APP_VERSION
 declare -A APP_ASSETS
 declare -A APP_IRC_TARGETS
+declare -A APP_BUILDER_ARGS
 
 # Source the actual config which will populate the arrays
 . ${arg_config}
