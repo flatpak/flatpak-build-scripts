@@ -270,9 +270,41 @@ function buildInstallFlatpakApps() {
     for file in *.app; do
 	app_id=$(basename $file .app)
 
-	notifyIrcTarget ${module} "regular" "build-${module}-${app_id}-${build_source_arch}.txt" "Starting build of '${app_id}'"
-
 	rm -rf ${app_dir}
+
+        # We run the irc notification i parallel, because we want
+        # to avoid doing any notitification at all for the
+        # continuous case if the json was unchanged
+        coproc IRCNOTIFY {
+            # Try to read the error code, but time
+            # out to check if the app directory
+            # exists, which means the build has started
+            while ! read -t 1 error_code; do
+                if [ -d app ]; then
+                    break; # Build started, lets notify on it
+                fi
+            done
+
+            if [ -d app ]; then
+	        notifyIrcTarget ${module} "regular" "build-${module}-${app_id}-${build_source_arch}.txt" "Starting build of '${app_id}'"
+            fi
+
+            # Wait until the build is done and we have the error code
+            while [ -z "$error_code" ]; do
+                read error_code
+            done
+
+            if [ -d app ]; then
+	        if [ "${error_code}" -ne "0" ]; then
+		    notifyIrcTarget ${module} "fail" "build-${module}-${app_id}-${build_source_arch}.txt" "App '${app_id}' build failed"
+	        else
+		    notifyIrcTarget ${module} "success" "build-${module}-${app_id}-${build_source_arch}.txt"  "App '${app_id}' build success"
+	        fi
+            elif ${build_source_unconditional}; then
+	        notifyIrcTarget ${module} "regular" "build-${module}-${app_id}-${build_source_arch}.txt" "App '${app_id}' already up to date"
+            fi
+        }
+
 	if [ ! -z "${build_source_logdir}" ]; then
 	    ./build.sh $file "${args[@]}" > "${build_source_logdir}/build-${module}-${app_id}-${build_source_arch}.txt" 2>&1
 	else
@@ -280,22 +312,17 @@ function buildInstallFlatpakApps() {
 	fi
 	error_code=$?
 
+	# Make an announcement
+        echo $error_code >&"${IRCNOTIFY[1]}"
+        wait ${IRCNOTIFY_PID}
+
         # Error code 42 means we skipped the build due to unchanged file
 	if [ "${error_code}" -eq "42" ]; then
+            echo "No changes to app ${app_id} json, removing log"
             rm "${build_source_logdir}/build-${module}-${app_id}-${build_source_arch}.txt"
         fi
 
-	# Make an announcement
-	if [ -d "${app_dir}" ]; then
-	    if [ "${error_code}" -ne "0" ]; then
-		notifyIrcTarget ${module} "fail" "build-${module}-${app_id}-${build_source_arch}.txt" "App '${app_id}' build failed"
-	    else
-		notifyIrcTarget ${module} "success" "build-${module}-${app_id}-${build_source_arch}.txt"  "App '${app_id}' build success"
-	    fi
-	    rm -rf ${app_dir}
-	else
-	    notifyIrcTarget ${module} "regular" "build-${module}-${app_id}-${build_source_arch}.txt" "App '${app_id}' already up to date"
-	fi
+	rm -rf ${app_dir}
 
 	# Failed builds will accumulate quickly in the build directory, zap em
 	[ -d "${moduledir}/${flatpak_build_subdir}" ] && rm -rf "${moduledir}/${flatpak_build_subdir}"
