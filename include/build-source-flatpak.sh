@@ -260,8 +260,8 @@ function buildInstallFlatpakApps() {
     if [ ! -z "${gpg_arg}" ]; then
 	args+=(${gpg_arg})
     fi
-    if [ ! -z ${APP_REPO_SUFFIX["${module}"]} ]; then
-	args+=(${APP_REPO_SUFFIX["${module}"]})
+    if [ ! -z ${APP_BUILDER_ARGS["${module}"]} ]; then
+	args+=(${APP_BUILDER_ARGS["${module}"]})
     fi
 
     # failing a build here is non-fatal, we want to try to
