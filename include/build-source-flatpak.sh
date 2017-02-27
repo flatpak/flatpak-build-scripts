@@ -320,6 +320,10 @@ function buildInstallFlatpakApps() {
 	if [ "${error_code}" -eq "42" ]; then
             echo "No changes to app ${app_id} json, removing log"
             rm "${build_source_logdir}/build-${module}-${app_id}-${build_source_arch}.txt"
+        elif [ "${error_code}" -ne "0" ]; then
+            echo "Build failed: ${module}-${app_id}-${build_source_arch}"
+        else
+            echo "Build succeeded: ${module}-${app_id}-${build_source_arch}"
         fi
 
 	rm -rf ${app_dir}
