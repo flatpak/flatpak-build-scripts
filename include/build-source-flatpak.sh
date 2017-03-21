@@ -257,6 +257,7 @@ function buildInstallFlatpakApps() {
 
     args+=("--repo=${flatpak_repo}")
     args+=("--arch=${build_source_arch}")
+    args+=("--default-branch=${branch}")
     if [ ! -z "${gpg_arg}" ]; then
 	args+=(${gpg_arg})
     fi
