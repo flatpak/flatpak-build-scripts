@@ -73,14 +73,12 @@ function flatpakInstallAsset() {
 
     local arch_arg="--arch=${build_source_arch}"
 
-    # If install reports an error it's probably installed, try an upgrade in that case.
-    flatpak install ${flatpak_install_args} ${arch_arg} ${flatpak_remote} ${asset} ${branch} > /dev/null 2>&1
-    error_code=$?
+    # We both install (which is skipped if already installed) and update
+    flatpak install ${flatpak_install_args} ${arch_arg} ${flatpak_remote} ${asset} ${branch} || \
+	    dienow "Failed to install: ${asset}/${branch} from remote ${flatpak_remote}"
 
-    if [ "${error_code}" -ne "0" ]; then
-	flatpak update ${flatpak_install_args} ${arch_arg} ${asset} ${branch} || \
-	    dienow "Failed to install or update: ${asset}/${branch} from remote ${flatpak_remote}"
-    fi
+    flatpak update ${flatpak_install_args} ${arch_arg} ${asset} ${branch} || \
+	dienow "Failed to update: ${asset}/${branch} from remote ${flatpak_remote}"
 }
 
 function composeGpgArgs() {
