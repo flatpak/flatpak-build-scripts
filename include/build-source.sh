@@ -351,11 +351,15 @@ function buildSourceRun() {
 
 	if [ ! -z "${build_source_target}" ]; then
 	    buildSourceDownload "${build_source_target}"
-	    buildSourceBuild "${build_source_target}" "$?"
+	    if ! buildSourceBuild "${build_source_target}" "$?"; then
+                continue; # Some failures are fatal for the entire arch
+            fi
 	else
 	    for module in "${build_source_modules[@]}"; do
 		buildSourceDownload "${module}"
-		buildSourceBuild "${module}" "$?"
+                if ! buildSourceBuild "${module}" "$?"; then
+                    continue; # Some failures are fatal for the entire arch
+                fi
 	    done
 	fi
     done

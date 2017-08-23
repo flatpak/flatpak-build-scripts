@@ -37,4 +37,5 @@ function buildInstallAutotools() {
     make -j8 || dienow
     echo "Installing ${module}"
     make install || dienow
+    return 0
 }

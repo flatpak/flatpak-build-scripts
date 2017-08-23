@@ -139,13 +139,15 @@ function buildInstallFlatpakBase() {
     fi
 
     # A runtime build failure is fatal, we can't build anything else without it
-    [ "${error_code}" -ne "0" ] && dienow
+    # However, we return an error so we can build the other arches
+    [ "${error_code}" -ne "0" ] && return 1
 
     # Ensure there is a remote and install
     flatpakEnsureRemote ${repo_suffix}
     for asset in ${assets[@]}; do
 	flatpakInstallAsset "${asset}" "${version}" "${repo_suffix}"
     done
+    return 0
 }
 
 #############################################
@@ -226,7 +228,8 @@ function buildInstallFlatpakSdk() {
     [ -d "${moduledir}/${flatpak_build_subdir}" ] && rm -rf "${moduledir}/${flatpak_build_subdir}"
 
     # An SDK build failure is fatal, we can't build the apps without knowing we have the SDK
-    [ "${error_code}" -ne "0" ] && dienow
+    [ "${error_code}" -ne "0" ] && return 1
+    return 0
 }
 
 #############################################
@@ -330,4 +333,5 @@ function buildInstallFlatpakApps() {
 	# Failed builds will accumulate quickly in the build directory, zap em
 	[ -d "${moduledir}/${flatpak_build_subdir}" ] && rm -rf "${moduledir}/${flatpak_build_subdir}"
     done
+    return 0
 }
