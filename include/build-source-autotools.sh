@@ -28,7 +28,8 @@ function buildInstallAutotools() {
 	return
     fi
 
-    export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${build_source_prefix}/lib/pkgconfig" 
+    export PKG_CONFIG_PATH="${build_source_prefix}/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    export PATH="${build_source_prefix}/bin:${PATH}"
 
     cd "${moduledir}" || dienow
     echo "Configuring ${module}"
