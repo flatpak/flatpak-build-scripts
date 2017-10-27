@@ -161,9 +161,9 @@ function refreshTools() {
     #
     # Refresh the build tooling itself with the autotools stuff
     #
-    buildSourceAdd "ostree"     "https://github.com/ostreedev/ostree"    "master" buildInstallAutotools
-    buildSourceAdd "flatpak"    "https://github.com/flatpak/flatpak.git" "master" buildInstallAutotools
-    buildSourceAdd "flatpak-builder"    "https://github.com/flatpak/flatpak-builder.git" "master" buildInstallAutotools
+    buildSourceAdd "ostree"     "https://github.com/ostreedev/ostree"    "v2017.12" buildInstallAutotools
+    buildSourceAdd "flatpak"    "https://github.com/flatpak/flatpak.git" "0.10.0" buildInstallAutotools
+    buildSourceAdd "flatpak-builder"    "https://github.com/flatpak/flatpak-builder.git" "0.10.1" buildInstallAutotools
 
     buildSourceRun
 }
