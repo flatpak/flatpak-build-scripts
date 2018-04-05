@@ -27,6 +27,13 @@ declare -A IRC_TARGET_NICK
 declare -A IRC_TARGET_JOIN
 declare -A IRC_TARGET_FILTER
 
+REMOTES_LIST=()
+declare -A REMOTES_FLATPAKREPO
+
+BASE_DEP_LIST=()
+declare -A BASE_DEP_REMOTE
+declare -A BASE_DEP_REFS
+
 # Various build type lists and their
 # corresponding associative arrays
 BASE_SDK_LIST=()

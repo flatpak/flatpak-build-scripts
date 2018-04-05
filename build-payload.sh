@@ -154,6 +154,32 @@ fi
 . ${topdir}/include/build-source.sh
 . ${topdir}/include/build-source-flatpak.sh
 
+for name in "${REMOTES_LIST[@]}"; do
+    echo ${REMOTES_FLATPAKREPO}
+    flatpak remote-add --user --if-not-exists ${name} ${REMOTES_FLATPAKREPO["${name}"]}
+done
+
+for dep in "${BASE_DEP_LIST[@]}"; do
+    dep_refs=${BASE_DEP_REFS["${dep}"]}
+    dep_remote=${BASE_DEP_REMOTE["${dep}"]}
+    install_refs=""
+    update_refs=""
+    for dep_ref in ${dep_refs}; do
+        old_origin=`flatpak --user info --arch=${build_source_arch} --show-origin ${dep_ref} 2>/dev/null`
+        if [ "x${old_origin}" != "x${dep_remote}" ]; then
+            install_refs="${install_refs} ${dep_ref}"
+        else
+            update_refs="${update_refs} ${dep_ref}"
+        fi
+    done
+    if [[ ! -z  $install_refs  ]]; then
+        flatpak install --user --subpath= --reinstall --arch=${build_source_arch} ${dep_remote} ${install_refs}
+    fi
+    if [[ ! -z  $update_refs  ]]; then
+        flatpak update --user --subpath= --arch=${build_source_arch} ${update_refs}
+    fi
+done
+
 #
 # Add the build sources defined in build.conf
 #
