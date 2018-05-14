@@ -156,7 +156,7 @@ fi
 
 for name in "${REMOTES_LIST[@]}"; do
     echo ${REMOTES_FLATPAKREPO}
-    flatpak remote-add --user --if-not-exists ${name} ${REMOTES_FLATPAKREPO["${name}"]}
+    flatpak remote-add --user --if-not-exists ${name} ${REMOTES_ARGS["${name}"]} ${REMOTES_FLATPAKREPO["${name}"]}
 done
 
 for dep in "${BASE_DEP_LIST[@]}"; do
