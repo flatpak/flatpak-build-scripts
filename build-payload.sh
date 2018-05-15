@@ -154,12 +154,6 @@ if ! (( ${#BUILD_ARCHES[@]} )); then
     BUILD_ARCHES=(${build_source_arch})
 fi
 
-# If there is no build_source_arch, we are building the native
-# tooling and dont require any, just make it a dummy for the loop below
-if ! (( ${#BUILD_ARCHES[@]} )); then
-    BUILD_ARCHES=("dummy")
-fi
-
 #
 # Import the build source mechanics once the config has been loaded
 #
