@@ -330,18 +330,6 @@ function buildSourceRun() {
 	ensureHeadroomGigabytes ${headroom_gb}
     fi
 
-    # If an array of build arches is unspecified, then
-    # default it to ${build_source_arch}.
-    if ! (( ${#BUILD_ARCHES[@]} )); then
-	BUILD_ARCHES=(${build_source_arch})
-    fi
-
-    # If there is no build_source_arch, we are building the native
-    # tooling and dont require any, just make it a dummy for the loop below
-    if ! (( ${#BUILD_ARCHES[@]} )); then
-	BUILD_ARCHES=("dummy")
-    fi
-
     # Loop over the arches and set build_source_arch
     # for each iteration
     for arch in ${BUILD_ARCHES[@]}; do

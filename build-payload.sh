@@ -148,6 +148,18 @@ else
     build_source_arch=$(flatpak --default-arch)
 fi
 
+# If an array of build arches is unspecified, then
+# default it to ${build_source_arch}.
+if ! (( ${#BUILD_ARCHES[@]} )); then
+    BUILD_ARCHES=(${build_source_arch})
+fi
+
+# If there is no build_source_arch, we are building the native
+# tooling and dont require any, just make it a dummy for the loop below
+if ! (( ${#BUILD_ARCHES[@]} )); then
+    BUILD_ARCHES=("dummy")
+fi
+
 #
 # Import the build source mechanics once the config has been loaded
 #
@@ -159,25 +171,27 @@ for name in "${REMOTES_LIST[@]}"; do
     flatpak remote-add --user --if-not-exists ${name} ${REMOTES_ARGS["${name}"]} ${REMOTES_FLATPAKREPO["${name}"]}
 done
 
-for dep in "${BASE_DEP_LIST[@]}"; do
-    dep_refs=${BASE_DEP_REFS["${dep}"]}
-    dep_remote=${BASE_DEP_REMOTE["${dep}"]}
-    install_refs=""
-    update_refs=""
-    for dep_ref in ${dep_refs}; do
-        old_origin=`flatpak --user info --arch=${build_source_arch} --show-origin ${dep_ref} 2>/dev/null`
-        if [ "x${old_origin}" != "x${dep_remote}" ]; then
-            install_refs="${install_refs} ${dep_ref}"
-        else
-            update_refs="${update_refs} ${dep_ref}"
+for arch in ${BUILD_ARCHES[@]}; do
+    for dep in "${BASE_DEP_LIST[@]}"; do
+        dep_refs=${BASE_DEP_REFS["${dep}"]}
+        dep_remote=${BASE_DEP_REMOTE["${dep}"]}
+        install_refs=""
+        update_refs=""
+        for dep_ref in ${dep_refs}; do
+            old_origin=`flatpak --user info --arch=${arch} --show-origin ${dep_ref} 2>/dev/null`
+            if [ "x${old_origin}" != "x${dep_remote}" ]; then
+                install_refs="${install_refs} ${dep_ref}"
+            else
+                update_refs="${update_refs} ${dep_ref}"
+            fi
+        done
+        if [[ ! -z  $install_refs  ]]; then
+            flatpak install --user --subpath= --reinstall --arch=${arch} ${dep_remote} ${install_refs}
+        fi
+        if [[ ! -z  $update_refs  ]]; then
+            flatpak update --user --subpath= --arch=${arch} ${update_refs}
         fi
     done
-    if [[ ! -z  $install_refs  ]]; then
-        flatpak install --user --subpath= --reinstall --arch=${build_source_arch} ${dep_remote} ${install_refs}
-    fi
-    if [[ ! -z  $update_refs  ]]; then
-        flatpak update --user --subpath= --arch=${build_source_arch} ${update_refs}
-    fi
 done
 
 #
