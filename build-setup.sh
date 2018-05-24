@@ -180,7 +180,7 @@ function refreshSysdeps() {
 		     libgpg-error-dev libgpgme11-dev libfuse-dev libarchive-dev
 		     libgirepository1.0-dev libxau-dev libjson-glib-dev libpolkit-gobject-1-dev
 		     libseccomp-dev elfutils libelf-dev libdwarf-dev libsoup2.4-dev
-		     libappstream-glib-dev libcurl4-openssl-dev)
+		     libappstream-glib-dev libcurl4-openssl-dev fuse)
     #
     # Packages required on RHEL
     #
