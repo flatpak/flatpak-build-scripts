@@ -180,10 +180,10 @@ for arch in ${BUILD_ARCHES[@]}; do
             fi
         done
         if [[ ! -z  $install_refs  ]]; then
-            flatpak install --user --subpath= --reinstall --arch=${arch} ${dep_remote} ${install_refs}
+            flatpak install -y --user --subpath= --reinstall --arch=${arch} ${dep_remote} ${install_refs}
         fi
         if [[ ! -z  $update_refs  ]]; then
-            flatpak update --user --subpath= --arch=${arch} ${update_refs}
+            flatpak update -y --user --subpath= --arch=${arch} ${update_refs}
         fi
     done
 done
