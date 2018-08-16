@@ -66,18 +66,13 @@ function flatpakInstallAsset() {
 
     echo "Installing asset ${asset} at branch ${branch} to repo${repo_suffix}"
 
-    # Dont specify the branch when it's master
-    if [ "${branch}" == "master" ]; then
-	branch=
-    fi
-
     local arch_arg="--arch=${build_source_arch}"
 
     # We both install (which is skipped if already installed) and update
-    flatpak install -y ${flatpak_install_args} ${arch_arg} ${flatpak_remote} ${asset} ${branch} || \
+    flatpak install -y ${flatpak_install_args} ${arch_arg} ${flatpak_remote} ${asset}//${branch} || \
 	    dienow "Failed to install: ${asset}/${branch} from remote ${flatpak_remote}"
 
-    flatpak update -y ${flatpak_install_args} ${arch_arg} ${asset} ${branch} || \
+    flatpak update -y ${flatpak_install_args} ${arch_arg} ${asset}//${branch} || \
 	dienow "Failed to update: ${asset}/${branch} from remote ${flatpak_remote}"
 }
 
